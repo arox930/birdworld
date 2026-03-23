@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, Pencil, Trash2, Search, Users, ChevronDown, ChevronRight, Bird, Dog } from "lucide-react";
+import { UserPlus, Pencil, Trash2, Search, Users, ChevronDown, ChevronRight, Bird } from "lucide-react";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
 import { format } from "date-fns";
 
