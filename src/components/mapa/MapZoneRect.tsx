@@ -1,4 +1,4 @@
-import { Bird, Dog, Heart, GripVertical, Trash2, FolderOutput } from "lucide-react";
+import { Bird, Heart, GripVertical, Trash2, FolderOutput } from "lucide-react";
 import type { MapZone } from "@/hooks/useMapZones";
 
 interface AnimalOnMap {
