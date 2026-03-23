@@ -1,4 +1,5 @@
-import { Bird, Plus, MapPin, FolderPlus } from "lucide-react";
+import { useState } from "react";
+import { Bird, Plus, MapPin, FolderPlus, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { MapZone } from "@/hooks/useMapZones";
@@ -32,7 +33,17 @@ export function MapSidebar({
   onNewZoneOpen,
   onNewFolderOpen,
 }: Props) {
-  const standaloneZones = zones.filter((z) => !z.folder_id);
+  const [open, setOpen] = useState(true);
+
+  if (!open) {
+    return (
+      <div className="flex flex-col items-center py-3 px-1 border-r border-border bg-card shrink-0">
+        <Button size="icon" variant="ghost" onClick={() => setOpen(true)} className="h-8 w-8">
+          <PanelLeftOpen className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-72 border-r border-border bg-card flex flex-col shrink-0">
@@ -47,11 +58,13 @@ export function MapSidebar({
           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onNewZoneOpen}>
             <Plus className="h-3 w-3 mr-1" /> Zona
           </Button>
+          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setOpen(false)}>
+            <PanelLeftClose className="h-3.5 w-3.5" />
+          </Button>
         </div>
       </div>
 
       <ScrollArea className="flex-1">
-        {/* Unmapped zones */}
         {unmappedZones.length > 0 && (
           <div className="p-4 border-b border-border">
             <h3 className="text-sm font-medium text-muted-foreground mb-2">Zonas sin dibujar</h3>
@@ -68,7 +81,6 @@ export function MapSidebar({
           </div>
         )}
 
-        {/* Unassigned animals */}
         <div className="p-4">
           <h3 className="text-sm font-medium text-muted-foreground mb-2">
             Sin zona asignada ({unassigned.length})
