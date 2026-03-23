@@ -2,20 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { Constants } from "@/integrations/supabase/types";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
@@ -44,22 +32,17 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: Props) {
   const queryClient = useQueryClient();
   const [monto, setMonto] = useState("");
   const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0]);
-  const [animalType, setAnimalType] = useState<"bird" | "dog" | "">("");
   const [categoria, setCategoria] = useState<string>("");
   const [subcategoria, setSubcategoria] = useState<string>("");
   const [descripcion, setDescripcion] = useState("");
-
-  const [dogBreeds, setDogBreeds] = useState<string[]>([]);
   const [birdSubspecies, setBirdSubspecies] = useState<{ id: string; nombre_especie: string }[]>([]);
 
   const isEditing = !!expense;
 
-  // Populate form when editing
   useEffect(() => {
     if (expense && open) {
       setMonto(String(expense.monto));
       setFecha(expense.fecha);
-      setAnimalType(expense.animal_type as "bird" | "dog");
       setCategoria(expense.categoria);
       setSubcategoria(expense.subcategoria || "");
       setDescripcion(expense.descripcion || "");
@@ -68,35 +51,19 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: Props) {
     }
   }, [expense, open]);
 
-  // Load dog breeds
   useEffect(() => {
-    supabase.from("dogs").select("raza").then(({ data }) => {
-      if (data) {
-        const unique = [...new Set(data.map(d => d.raza))].sort();
-        setDogBreeds(unique);
-      }
-    });
-  }, []);
-
-  // Load bird subspecies when category changes
-  useEffect(() => {
-    if (animalType === "bird" && categoria) {
-      supabase
-        .from("bird_species_catalog")
-        .select("id, nombre_especie")
-        .eq("nombre_comun", categoria)
-        .then(({ data }) => {
-          setBirdSubspecies(data ?? []);
-        });
+    if (categoria) {
+      supabase.from("bird_species_catalog").select("id, nombre_especie").eq("nombre_comun", categoria).then(({ data }) => {
+        setBirdSubspecies(data ?? []);
+      });
     } else {
       setBirdSubspecies([]);
     }
-  }, [animalType, categoria]);
+  }, [categoria]);
 
   const resetForm = () => {
     setMonto("");
     setFecha(new Date().toISOString().split("T")[0]);
-    setAnimalType("");
     setCategoria("");
     setSubcategoria("");
     setDescripcion("");
@@ -107,9 +74,9 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: Props) {
       const payload = {
         monto: parseFloat(monto),
         fecha,
-        animal_type: animalType,
+        animal_type: "bird",
         categoria,
-        subcategoria: animalType === "bird" ? subcategoria || null : null,
+        subcategoria: subcategoria || null,
         descripcion: descripcion || null,
       };
       if (isEditing) {
@@ -132,7 +99,7 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: Props) {
     },
   });
 
-  const isValid = monto && parseFloat(monto) > 0 && fecha && animalType && categoria;
+  const isValid = monto && parseFloat(monto) > 0 && fecha && categoria;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -151,38 +118,15 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: Props) {
             <Input id="fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label>Tipo de animal</Label>
-            <Select value={animalType} onValueChange={(v) => { setAnimalType(v as "bird" | "dog"); setCategoria(""); setSubcategoria(""); }}>
-              <SelectTrigger><SelectValue placeholder="Selecciona tipo" /></SelectTrigger>
+            <Label>Nombre común</Label>
+            <Select value={categoria} onValueChange={(v) => { setCategoria(v); setSubcategoria(""); }}>
+              <SelectTrigger><SelectValue placeholder="Selecciona nombre común" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="bird">Aves</SelectItem>
-                <SelectItem value="dog">Perros</SelectItem>
+                {BIRD_SPECIES.map((species) => (<SelectItem key={species} value={species}>{getSpeciesDisplayName(species)}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>
-          {animalType === "dog" && (
-            <div className="space-y-2">
-              <Label>Raza</Label>
-              <Select value={categoria} onValueChange={setCategoria}>
-                <SelectTrigger><SelectValue placeholder="Selecciona raza" /></SelectTrigger>
-                <SelectContent>
-                  {dogBreeds.map((breed) => (<SelectItem key={breed} value={breed}>{breed}</SelectItem>))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          {animalType === "bird" && (
-            <div className="space-y-2">
-              <Label>Nombre común</Label>
-              <Select value={categoria} onValueChange={(v) => { setCategoria(v); setSubcategoria(""); }}>
-                <SelectTrigger><SelectValue placeholder="Selecciona nombre común" /></SelectTrigger>
-                <SelectContent>
-                  {BIRD_SPECIES.map((species) => (<SelectItem key={species} value={species}>{getSpeciesDisplayName(species)}</SelectItem>))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          {animalType === "bird" && categoria && birdSubspecies.length > 0 && (
+          {categoria && birdSubspecies.length > 0 && (
             <div className="space-y-2">
               <Label>Especie (opcional)</Label>
               <Select value={subcategoria || "__none__"} onValueChange={(v) => setSubcategoria(v === "__none__" ? "" : v)}>
