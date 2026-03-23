@@ -6,13 +6,10 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Aves from "./pages/Aves";
-import Perros from "./pages/Perros";
 import Gastos from "./pages/Gastos";
 import Compradores from "./pages/Compradores";
-import CalendarioVacunacion from "./pages/CalendarioVacunacion";
 import Mapa from "./pages/Mapa";
 import PlantillasCesion from "./pages/PlantillasCesion";
-import Excel from "./pages/Excel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,13 +25,10 @@ const App = () => (
           <Route path="/app" element={<AppLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="aves" element={<Aves />} />
-            <Route path="perros" element={<Perros />} />
             <Route path="gastos" element={<Gastos />} />
             <Route path="compradores" element={<Compradores />} />
-            <Route path="calendario-vacunacion" element={<CalendarioVacunacion />} />
             <Route path="mapa" element={<Mapa />} />
             <Route path="plantillas-cesion" element={<PlantillasCesion />} />
-            <Route path="excel" element={<Excel />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
