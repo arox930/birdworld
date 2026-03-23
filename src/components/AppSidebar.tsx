@@ -1,12 +1,10 @@
-import { CalendarCheck, Dog, LayoutDashboard, LogOut, Map, Users, FileText, Bird, FileSpreadsheet } from "lucide-react";
+import { CalendarCheck, Dog, LayoutDashboard, Map, Users, FileText, Bird, FileSpreadsheet } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import logoImg from "@/assets/logo.ico";
 import { useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -32,7 +30,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { signOut } = useAuth();
+  
 
   return (
     <Sidebar collapsible="icon">
@@ -77,16 +75,6 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={signOut} tooltip="Cerrar sesión">
-              <LogOut className="h-4 w-4" />
-              <span>Cerrar sesión</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   );
 }
