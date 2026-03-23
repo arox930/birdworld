@@ -77,7 +77,7 @@ export function ExpensesList() {
                       {expense.monto.toFixed(2)} €
                     </span>
                     <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                      {expense.animal_type === "bird" ? "Ave" : "Perro"}
+                      Ave
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5">

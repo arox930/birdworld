@@ -1,4 +1,4 @@
-import { Bird, Dog, Plus, MapPin, FolderPlus } from "lucide-react";
+import { Bird, Plus, MapPin, FolderPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { MapZone } from "@/hooks/useMapZones";
@@ -81,11 +81,7 @@ export function MapSidebar({
                 onDragStart={(e) => onAnimalDragStart(e, a)}
                 className="flex items-center gap-2 text-sm p-1.5 rounded-md bg-muted/50 cursor-grab active:cursor-grabbing hover:bg-muted transition-colors"
               >
-                {a.type === "bird" ? (
-                  <Bird className="h-3.5 w-3.5 text-primary shrink-0" />
-                ) : (
-                  <Dog className="h-3.5 w-3.5 text-primary shrink-0" />
-                )}
+                <Bird className="h-3.5 w-3.5 text-primary shrink-0" />
                 <span className="truncate text-foreground">{a.label}</span>
               </div>
             ))}

@@ -1,36 +1,18 @@
 import { useState } from "react";
-import { Bird, Dog, ChevronRight, FileText, Plus, Pencil } from "lucide-react";
+import { Bird, ChevronRight, FileText, Plus, Pencil } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { useCessionTemplates, useUpsertCessionTemplate } from "@/hooks/useCessionTemplates";
 import { useBirdSpeciesCatalog } from "@/hooks/useBirdSpeciesCatalog";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Constants } from "@/integrations/supabase/types";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
 import { TemplateEditorDialog } from "@/components/plantillas/TemplateEditorDialog";
 
 const BIRD_SPECIES = Constants.public.Enums.bird_species;
 
-function useDogBreeds() {
-  return useQuery({
-    queryKey: ["dog-breeds"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("dogs")
-        .select("raza")
-        .order("raza");
-      if (error) throw error;
-      const unique = [...new Set(data.map((d) => d.raza))];
-      return unique;
-    },
-  });
-}
-
 export default function PlantillasCesion() {
   const { data: templates = [] } = useCessionTemplates();
   const { data: speciesCatalog = [] } = useBirdSpeciesCatalog();
-  const { data: dogBreeds = [] } = useDogBreeds();
   const upsert = useUpsertCessionTemplate();
 
   const [editorOpen, setEditorOpen] = useState(false);
@@ -58,7 +40,6 @@ export default function PlantillasCesion() {
     setEditorOpen(false);
   };
 
-  // Group bird species catalog by nombre_comun
   const birdGroups: Record<string, string[]> = {};
   for (const nc of BIRD_SPECIES) {
     birdGroups[nc] = speciesCatalog
@@ -73,11 +54,10 @@ export default function PlantillasCesion() {
         <h1 className="text-2xl font-bold text-foreground">Plantillas de Cesión</h1>
       </div>
       <p className="text-sm text-muted-foreground">
-        Crea plantillas de documento de cesión por especie (aves) o raza (perros). 
+        Crea plantillas de documento de cesión por especie. 
         Usa variables como <code className="bg-muted px-1 rounded text-xs">{"{{nombre_comprador}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{dni_comprador}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{precio}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{fecha}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{identificador_animal}}"}</code> para autocompletar.
       </p>
 
-      {/* AVES */}
       <Collapsible defaultOpen>
         <CollapsibleTrigger className="flex items-center gap-2 w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors group">
           <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
@@ -118,38 +98,6 @@ export default function PlantillasCesion() {
               </CollapsibleContent>
             </Collapsible>
           ))}
-        </CollapsibleContent>
-      </Collapsible>
-
-      {/* PERROS */}
-      <Collapsible defaultOpen>
-        <CollapsibleTrigger className="flex items-center gap-2 w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors group">
-          <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
-          <Dog className="h-5 w-5 text-primary" />
-          <span className="font-semibold text-foreground">Perros</span>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="pl-4 mt-2 space-y-1">
-          {dogBreeds.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-1">Sin razas registradas</p>
-          ) : (
-            dogBreeds.map((raza) => {
-              const has = !!getTemplate("dog", raza);
-              return (
-                <div key={raza} className="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-muted/30">
-                  <span className="text-sm text-foreground">{raza}</span>
-                  <Button
-                    size="sm"
-                    variant={has ? "outline" : "default"}
-                    className="h-7 text-xs gap-1"
-                    onClick={() => openEditor("dog", raza)}
-                  >
-                    {has ? <Pencil className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
-                    {has ? "Editar" : "Añadir"}
-                  </Button>
-                </div>
-              );
-            })
-          )}
         </CollapsibleContent>
       </Collapsible>
 

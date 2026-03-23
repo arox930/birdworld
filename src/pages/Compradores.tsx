@@ -9,28 +9,22 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, Pencil, Trash2, Search, Users, ChevronDown, ChevronRight, Bird, Dog } from "lucide-react";
+import { UserPlus, Pencil, Trash2, Search, Users, ChevronDown, ChevronRight, Bird } from "lucide-react";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
 import { format } from "date-fns";
 
 type AnimalInfo = {
   id: string;
-  type: "bird" | "dog";
+  type: "bird";
   label: string;
   fecha_cesion: string;
   precio: number;
-  // Bird fields
   anilla?: string | null;
   microchip?: string | null;
   numero_cites?: string | null;
   id_miteco?: string | null;
   sexo?: string;
   especie_nombre?: string | null;
-  // Dog fields
-  nombre?: string | null;
-  raza?: string | null;
-  color?: string | null;
-  pedigree?: string | null;
   comentarios?: string | null;
 };
 
@@ -40,60 +34,36 @@ function useBuyerAnimals() {
     queryFn: async () => {
       const { data: cessions, error } = await supabase
         .from("cessions")
-        .select("buyer_id, animal_id, animal_type, precio, fecha_cesion");
+        .select("buyer_id, animal_id, animal_type, precio, fecha_cesion")
+        .eq("animal_type", "bird");
       if (error) throw error;
 
-      const birdIds = cessions.filter(c => c.animal_type === "bird").map(c => c.animal_id);
-      const dogIds = cessions.filter(c => c.animal_type === "dog").map(c => c.animal_id);
+      const birdIds = cessions.map(c => c.animal_id);
 
-      const [birdsRes, dogsRes] = await Promise.all([
-        birdIds.length > 0
-          ? supabase.from("birds").select("id, especie, anilla, microchip, numero_cites, id_miteco, sexo, comentarios, especie_id, species_catalog:especie_id(nombre_especie)").in("id", birdIds)
-          : { data: [] },
-        dogIds.length > 0
-          ? supabase.from("dogs").select("id, nombre, raza, color, sexo, microchip, pedigree, comentarios").in("id", dogIds)
-          : { data: [] },
-      ]);
+      const birdsRes = birdIds.length > 0
+        ? await supabase.from("birds").select("id, especie, anilla, microchip, numero_cites, id_miteco, sexo, comentarios, especie_id, species_catalog:especie_id(nombre_especie)").in("id", birdIds)
+        : { data: [] };
 
       const birdsMap = new Map((birdsRes.data ?? []).map(b => [b.id, b]));
-      const dogsMap = new Map((dogsRes.data ?? []).map(d => [d.id, d]));
 
       const result: Record<string, AnimalInfo[]> = {};
       for (const c of cessions) {
         if (!result[c.buyer_id]) result[c.buyer_id] = [];
-        if (c.animal_type === "bird") {
-          const bird = birdsMap.get(c.animal_id);
-          result[c.buyer_id].push({
-            id: c.animal_id,
-            type: "bird",
-            label: bird ? getSpeciesDisplayName(bird.especie as any) : "Ave",
-            fecha_cesion: c.fecha_cesion,
-            precio: c.precio,
-            anilla: bird?.anilla,
-            microchip: bird?.microchip,
-            numero_cites: bird?.numero_cites,
-            id_miteco: bird?.id_miteco,
-            sexo: bird?.sexo,
-            especie_nombre: (bird as any)?.species_catalog?.nombre_especie,
-            comentarios: bird?.comentarios,
-          });
-        } else {
-          const dog = dogsMap.get(c.animal_id);
-          result[c.buyer_id].push({
-            id: c.animal_id,
-            type: "dog",
-            label: dog?.nombre || "Perro",
-            fecha_cesion: c.fecha_cesion,
-            precio: c.precio,
-            nombre: dog?.nombre,
-            raza: dog?.raza,
-            color: dog?.color,
-            sexo: dog?.sexo,
-            microchip: dog?.microchip,
-            pedigree: dog?.pedigree,
-            comentarios: dog?.comentarios,
-          });
-        }
+        const bird = birdsMap.get(c.animal_id);
+        result[c.buyer_id].push({
+          id: c.animal_id,
+          type: "bird",
+          label: bird ? getSpeciesDisplayName(bird.especie as any) : "Ave",
+          fecha_cesion: c.fecha_cesion,
+          precio: c.precio,
+          anilla: bird?.anilla,
+          microchip: bird?.microchip,
+          numero_cites: bird?.numero_cites,
+          id_miteco: bird?.id_miteco,
+          sexo: bird?.sexo,
+          especie_nombre: (bird as any)?.species_catalog?.nombre_especie,
+          comentarios: bird?.comentarios,
+        });
       }
       return result;
     },
@@ -307,33 +277,17 @@ export default function Compradores() {
                               {animals.map((a) => (
                                 <div key={a.id} className="rounded-md border border-border bg-card p-3 text-sm space-y-2">
                                   <div className="flex items-center gap-2">
-                                    {a.type === "bird" ? (
-                                      <Bird className="h-4 w-4 text-primary shrink-0" />
-                                    ) : (
-                                      <Dog className="h-4 w-4 text-primary shrink-0" />
-                                    )}
+                                    <Bird className="h-4 w-4 text-primary shrink-0" />
                                     <span className="font-medium">{a.label}</span>
                                     <Badge variant="outline" className="ml-auto text-[10px]">{a.precio.toFixed(2)} €</Badge>
                                   </div>
                                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                                    {a.type === "bird" ? (
-                                      <>
-                                        {a.especie_nombre && <div><span className="text-muted-foreground">Especie:</span> <span className="italic">{a.especie_nombre}</span></div>}
-                                        <div><span className="text-muted-foreground">Sexo:</span> {a.sexo || "—"}</div>
-                                        {a.anilla && <div><span className="text-muted-foreground">Anilla:</span> {a.anilla}</div>}
-                                        {a.microchip && <div><span className="text-muted-foreground">Microchip:</span> {a.microchip}</div>}
-                                        {a.numero_cites && <div><span className="text-muted-foreground">CITES:</span> {a.numero_cites}</div>}
-                                        {a.id_miteco && <div><span className="text-muted-foreground">MITECO:</span> {a.id_miteco}</div>}
-                                      </>
-                                    ) : (
-                                      <>
-                                        {a.raza && <div><span className="text-muted-foreground">Raza:</span> {a.raza}</div>}
-                                        <div><span className="text-muted-foreground">Sexo:</span> {a.sexo || "—"}</div>
-                                        {a.color && <div><span className="text-muted-foreground">Color:</span> {a.color}</div>}
-                                        {a.microchip && <div><span className="text-muted-foreground">Microchip:</span> {a.microchip}</div>}
-                                        {a.pedigree && <div><span className="text-muted-foreground">Pedigree:</span> {a.pedigree}</div>}
-                                      </>
-                                    )}
+                                    {a.especie_nombre && <div><span className="text-muted-foreground">Especie:</span> <span className="italic">{a.especie_nombre}</span></div>}
+                                    <div><span className="text-muted-foreground">Sexo:</span> {a.sexo || "—"}</div>
+                                    {a.anilla && <div><span className="text-muted-foreground">Anilla:</span> {a.anilla}</div>}
+                                    {a.microchip && <div><span className="text-muted-foreground">Microchip:</span> {a.microchip}</div>}
+                                    {a.numero_cites && <div><span className="text-muted-foreground">CITES:</span> {a.numero_cites}</div>}
+                                    {a.id_miteco && <div><span className="text-muted-foreground">MITECO:</span> {a.id_miteco}</div>}
                                     <div><span className="text-muted-foreground">Cesión:</span> {format(new Date(a.fecha_cesion + "T00:00:00"), "dd-MM-yyyy")}</div>
                                   </div>
                                   {a.comentarios && (
