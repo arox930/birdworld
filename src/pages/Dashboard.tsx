@@ -11,9 +11,7 @@ import { useDashboardData, type DashboardFilters } from "@/hooks/useDashboardDat
 const defaultFilters: DashboardFilters = {
   dateFrom: null,
   dateTo: null,
-  animalType: "all",
   birdSpecies: null,
-  dogBreed: null,
 };
 
 export default function Dashboard() {
@@ -23,14 +21,13 @@ export default function Dashboard() {
   const { data, isLoading } = useDashboardData(filters);
 
   const stats = data ?? {
-    totalBirds: 0, totalDogs: 0, aliveBirds: 0, aliveDogs: 0,
-    deadBirds: 0, deadDogs: 0, soldBirds: 0, soldDogs: 0,
-    totalRevenue: 0, birdRevenue: 0, dogRevenue: 0,
-    totalExpenses: 0, birdExpenses: 0, dogExpenses: 0, netProfit: 0,
+    totalBirds: 0, aliveBirds: 0,
+    deadBirds: 0, soldBirds: 0,
+    totalRevenue: 0, birdRevenue: 0,
+    totalExpenses: 0, birdExpenses: 0, netProfit: 0,
     monthlyRevenue: [], monthlyExpenses: [], monthlySales: [], monthlyBirths: [], monthlyDeaths: [],
-    sexDistribution: [], speciesDistribution: [], breedDistribution: [],
-    totalLitterPups: 0, totalLitterDeaths: 0, mortalityRate: 0,
-    totalSold: 0, totalDead: 0,
+    sexDistribution: [], speciesDistribution: [],
+    totalSold: 0, totalDead: 0, mortalityRate: 0,
   };
 
   return (
@@ -63,7 +60,7 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
-          <KPICards stats={stats} isLoading={isLoading} animalType={filters.animalType} />
+          <KPICards stats={stats} isLoading={isLoading} />
           <DashboardCharts
             monthlyRevenue={stats.monthlyRevenue}
             monthlyExpenses={stats.monthlyExpenses}
@@ -72,12 +69,8 @@ export default function Dashboard() {
             monthlyDeaths={stats.monthlyDeaths}
             sexDistribution={stats.sexDistribution}
             speciesDistribution={stats.speciesDistribution}
-            breedDistribution={stats.breedDistribution}
             birdRevenue={stats.birdRevenue}
-            dogRevenue={stats.dogRevenue}
             birdExpenses={stats.birdExpenses}
-            dogExpenses={stats.dogExpenses}
-            animalType={filters.animalType}
           />
         </>
       )}
