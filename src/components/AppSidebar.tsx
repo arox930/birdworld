@@ -5,7 +5,6 @@ import { useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
