@@ -1,8 +1,7 @@
-import { CalendarCheck, Dog, LayoutDashboard, LogOut, Map, Users, FileText, Bird, FileSpreadsheet } from "lucide-react";
+import { CalendarCheck, Dog, LayoutDashboard, Map, Users, FileText, Bird, FileSpreadsheet } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import logoImg from "@/assets/logo.ico";
 import { useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import {
   Sidebar,
   SidebarContent,
