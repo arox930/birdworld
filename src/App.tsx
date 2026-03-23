@@ -3,10 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
-import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Aves from "./pages/Aves";
 import Perros from "./pages/Perros";
@@ -26,31 +23,21 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-            <Route
-              path="/app"
-              element={
-                <ProtectedRoute>
-                  <AppLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="aves" element={<Aves />} />
-              <Route path="perros" element={<Perros />} />
-              <Route path="gastos" element={<Gastos />} />
-              <Route path="compradores" element={<Compradores />} />
-              <Route path="calendario-vacunacion" element={<CalendarioVacunacion />} />
-              <Route path="mapa" element={<Mapa />} />
-              <Route path="plantillas-cesion" element={<PlantillasCesion />} />
-              <Route path="excel" element={<Excel />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
+        <Routes>
+          <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+          <Route path="/app" element={<AppLayout />}>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="aves" element={<Aves />} />
+            <Route path="perros" element={<Perros />} />
+            <Route path="gastos" element={<Gastos />} />
+            <Route path="compradores" element={<Compradores />} />
+            <Route path="calendario-vacunacion" element={<CalendarioVacunacion />} />
+            <Route path="mapa" element={<Mapa />} />
+            <Route path="plantillas-cesion" element={<PlantillasCesion />} />
+            <Route path="excel" element={<Excel />} />
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
