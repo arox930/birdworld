@@ -33,7 +33,7 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex flex-col items-center px-2 py-3">
           <div className="flex items-center justify-center overflow-hidden">
-            <img src={logoImg} alt="BirdWorld" className={collapsed ? "w-10 h-10 object-contain" : "w-20 h-20 object-contain"} />
+            <img src={logoImg} alt="BirdWorld" className="w-20 h-20 object-contain" />
           </div>
           {!collapsed && (
             <span className="font-bold text-lg tracking-tight text-sidebar-foreground mt-1" style={{ fontFamily: "'Space Grotesk', system-ui" }}>
