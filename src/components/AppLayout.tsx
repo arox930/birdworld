@@ -1,10 +1,11 @@
+import type { CSSProperties } from "react";
 import { Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 
 export function AppLayout() {
   return (
-    <SidebarProvider>
+    <SidebarProvider style={{ "--sidebar-width-icon": "5.5rem" } as CSSProperties}>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
