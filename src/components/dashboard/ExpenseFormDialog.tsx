@@ -5,12 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Constants } from "@/integrations/supabase/types";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-const BIRD_SPECIES = Constants.public.Enums.bird_species;
+import { useBirdCommonNames } from "@/hooks/useBirdCommonNames";
 
 export type Expense = {
   id: string;
@@ -30,6 +28,7 @@ type Props = {
 
 export function ExpenseFormDialog({ open, onOpenChange, expense }: Props) {
   const queryClient = useQueryClient();
+  const { data: commonNames = [] } = useBirdCommonNames();
   const [monto, setMonto] = useState("");
   const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0]);
   const [categoria, setCategoria] = useState<string>("");
@@ -122,7 +121,7 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: Props) {
             <Select value={categoria} onValueChange={(v) => { setCategoria(v); setSubcategoria(""); }}>
               <SelectTrigger><SelectValue placeholder="Selecciona nombre común" /></SelectTrigger>
               <SelectContent>
-                {BIRD_SPECIES.map((species) => (<SelectItem key={species} value={species}>{getSpeciesDisplayName(species)}</SelectItem>))}
+                {commonNames.map((cn) => (<SelectItem key={cn.id} value={cn.nombre}>{getSpeciesDisplayName(cn.nombre)}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>

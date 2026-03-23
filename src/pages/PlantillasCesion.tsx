@@ -4,15 +4,14 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 import { useCessionTemplates, useUpsertCessionTemplate } from "@/hooks/useCessionTemplates";
 import { useBirdSpeciesCatalog } from "@/hooks/useBirdSpeciesCatalog";
-import { Constants } from "@/integrations/supabase/types";
+import { useBirdCommonNames } from "@/hooks/useBirdCommonNames";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
 import { TemplateEditorDialog } from "@/components/plantillas/TemplateEditorDialog";
-
-const BIRD_SPECIES = Constants.public.Enums.bird_species;
 
 export default function PlantillasCesion() {
   const { data: templates = [] } = useCessionTemplates();
   const { data: speciesCatalog = [] } = useBirdSpeciesCatalog();
+  const { data: commonNames = [] } = useBirdCommonNames();
   const upsert = useUpsertCessionTemplate();
 
   const [editorOpen, setEditorOpen] = useState(false);
@@ -41,9 +40,9 @@ export default function PlantillasCesion() {
   };
 
   const birdGroups: Record<string, string[]> = {};
-  for (const nc of BIRD_SPECIES) {
-    birdGroups[nc] = speciesCatalog
-      .filter((s) => s.nombre_comun === nc)
+  for (const cn of commonNames) {
+    birdGroups[cn.nombre] = speciesCatalog
+      .filter((s) => s.nombre_comun === cn.nombre)
       .map((s) => s.nombre_especie);
   }
 
@@ -65,19 +64,19 @@ export default function PlantillasCesion() {
           <span className="font-semibold text-foreground">Aves</span>
         </CollapsibleTrigger>
         <CollapsibleContent className="pl-4 mt-2 space-y-1">
-          {BIRD_SPECIES.map((nc) => (
-            <Collapsible key={nc}>
+          {commonNames.map((cn) => (
+            <Collapsible key={cn.id}>
               <CollapsibleTrigger className="flex items-center gap-2 w-full p-2 rounded-md hover:bg-muted/50 transition-colors group text-sm">
                 <ChevronRight className="h-3.5 w-3.5 transition-transform group-data-[state=open]:rotate-90" />
-                <span className="font-medium text-foreground">{getSpeciesDisplayName(nc)}</span>
-                <span className="text-muted-foreground text-xs">({birdGroups[nc]?.length || 0} especies)</span>
+                <span className="font-medium text-foreground">{getSpeciesDisplayName(cn.nombre)}</span>
+                <span className="text-muted-foreground text-xs">({birdGroups[cn.nombre]?.length || 0} especies)</span>
               </CollapsibleTrigger>
               <CollapsibleContent className="pl-6 mt-1 space-y-1">
-                {(birdGroups[nc] || []).length === 0 ? (
+                {(birdGroups[cn.nombre] || []).length === 0 ? (
                   <p className="text-xs text-muted-foreground py-1">Sin especies registradas</p>
                 ) : (
-                  birdGroups[nc].map((especie) => {
-                    const key = `${nc}::${especie}`;
+                  birdGroups[cn.nombre].map((especie) => {
+                    const key = `${cn.nombre}::${especie}`;
                     const has = !!getTemplate("bird", key);
                     return (
                       <div key={especie} className="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-muted/30">

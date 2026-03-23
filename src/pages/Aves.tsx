@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
-import { Bird, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Bird, Plus, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { BirdsTable } from "@/components/aves/BirdsTable";
 import { BirdsFilters } from "@/components/aves/BirdsFilters";
 import { BirdFormDialog } from "@/components/aves/BirdFormDialog";
@@ -13,12 +13,12 @@ import { SpeciesManager } from "@/components/aves/SpeciesManager";
 import { useBirds, useCreateBird, useUpdateBird, useDeleteBird } from "@/hooks/useBirds";
 import type { Bird as BirdType, BirdInsert } from "@/hooks/useBirds";
 import { useDownloadCessionPdf } from "@/hooks/useCessions";
-import { Constants } from "@/integrations/supabase/types";
+import { useBirdCommonNames, useCreateBirdCommonName, useDeleteBirdCommonName } from "@/hooks/useBirdCommonNames";
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/useDebounce";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
+import { cn } from "@/lib/utils";
 
-const COMMON_NAMES = Constants.public.Enums.bird_species;
 const PAGE_SIZE = 20;
 
 export default function Aves() {
@@ -28,8 +28,13 @@ export default function Aves() {
   const [estado, setEstado] = useState("all");
   const [speciesFilter, setSpeciesFilter] = useState<string | null>(null);
   const [page, setPage] = useState(0);
+  const [newCommonName, setNewCommonName] = useState("");
 
   const debouncedSearch = useDebounce(search, 300);
+
+  const { data: commonNames = [], isLoading: loadingNames } = useBirdCommonNames();
+  const createCommonName = useCreateBirdCommonName();
+  const deleteCommonName = useDeleteBirdCommonName();
 
   const filters = useMemo(() => ({
     search: debouncedSearch || undefined,
@@ -85,6 +90,18 @@ export default function Aves() {
     setPage(0);
   };
 
+  const handleAddCommonName = () => {
+    const trimmed = newCommonName.trim();
+    if (!trimmed) return;
+    if (commonNames.some(cn => cn.nombre.toLowerCase() === trimmed.toLowerCase())) {
+      toast.error("Ya existe ese nombre común");
+      return;
+    }
+    createCommonName.mutate(trimmed, { onSuccess: () => setNewCommonName("") });
+  };
+
+  const commonNamesList = commonNames.map(cn => cn.nombre);
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -102,33 +119,86 @@ export default function Aves() {
         </Button>
       </div>
 
-      <Tabs value={category} onValueChange={handleFilterChange(setCategory)}>
-        <TabsList className="flex-wrap h-auto gap-1">
-          <TabsTrigger value="all" className="text-xs">Todas</TabsTrigger>
-          {COMMON_NAMES.map(s => (
-            <TabsTrigger key={s} value={s} className="text-xs">{getSpeciesDisplayName(s)}</TabsTrigger>
+      {/* Common names filter bar with management */}
+      <div className="rounded-lg border border-border bg-card p-3 space-y-3">
+        <div className="flex flex-wrap gap-1.5 items-center">
+          <button
+            type="button"
+            onClick={() => { setCategory("all"); setSpeciesFilter(null); setPage(0); }}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
+              category === "all"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            )}
+          >
+            Todas
+          </button>
+          {commonNamesList.map(name => (
+            <div key={name} className="flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => { setCategory(name); setSpeciesFilter(null); setPage(0); }}
+                className={cn(
+                  "px-3 py-1.5 rounded-l-full text-xs font-medium transition-colors",
+                  category === name
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                )}
+              >
+                {getSpeciesDisplayName(name)}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const cn = commonNames.find(c => c.nombre === name);
+                  if (cn) {
+                    if (category === name) { setCategory("all"); setSpeciesFilter(null); }
+                    deleteCommonName.mutate(cn.id);
+                  }
+                }}
+                className="px-1.5 py-1.5 rounded-r-full bg-muted text-muted-foreground hover:bg-destructive/20 hover:text-destructive transition-colors"
+                title="Eliminar nombre común"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </div>
           ))}
-        </TabsList>
-      </Tabs>
+        </div>
+        <div className="flex gap-2 items-center">
+          <Input
+            placeholder="Nuevo nombre común..."
+            value={newCommonName}
+            onChange={(e) => setNewCommonName(e.target.value)}
+            className="h-8 text-xs max-w-xs"
+            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddCommonName())}
+          />
+          <Button size="sm" className="h-8 text-xs gap-1" onClick={handleAddCommonName} disabled={createCommonName.isPending}>
+            <Plus className="h-3 w-3" /> Añadir
+          </Button>
+        </div>
+      </div>
 
       {/* Species management + filtering */}
-      <div className="flex flex-wrap gap-1 items-center">
-        <span className="text-xs text-muted-foreground mr-1">Especies:</span>
-        {COMMON_NAMES.map(cn => (
-          <SpeciesManager
-            key={cn}
-            nombreComun={cn}
-            selectedSpeciesId={speciesFilter}
-            onSelectSpecies={(id, nombre) => {
-              setSpeciesFilter(id);
-              if (id) {
-                setCategory(nombre);
-              }
-              setPage(0);
-            }}
-          />
-        ))}
-      </div>
+      {commonNamesList.length > 0 && (
+        <div className="flex flex-wrap gap-1 items-center">
+          <span className="text-xs text-muted-foreground mr-1">Especies:</span>
+          {commonNamesList.map(cn => (
+            <SpeciesManager
+              key={cn}
+              nombreComun={cn}
+              selectedSpeciesId={speciesFilter}
+              onSelectSpecies={(id, nombre) => {
+                setSpeciesFilter(id);
+                if (id) {
+                  setCategory(nombre);
+                }
+                setPage(0);
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       <BirdsFilters
         search={search}
@@ -178,6 +248,7 @@ export default function Aves() {
         bird={editingBird}
         onSubmit={handleFormSubmit}
         isLoading={createBird.isPending || updateBird.isPending}
+        commonNames={commonNamesList}
       />
       <BirdDeleteDialog
         open={!!deletingBird}

@@ -44,6 +44,24 @@ export type Database = {
         }
         Relationships: []
       }
+      bird_common_names: {
+        Row: {
+          created_at: string
+          id: string
+          nombre: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nombre: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nombre?: string
+        }
+        Relationships: []
+      }
       bird_species_catalog: {
         Row: {
           created_at: string
@@ -72,7 +90,7 @@ export type Database = {
           comprador_id: string | null
           comprador_texto: string | null
           created_at: string
-          especie: Database["public"]["Enums"]["bird_species"]
+          especie: string
           especie_id: string | null
           fecha_cesion: string | null
           fecha_muerte: string | null
@@ -96,7 +114,7 @@ export type Database = {
           comprador_id?: string | null
           comprador_texto?: string | null
           created_at?: string
-          especie: Database["public"]["Enums"]["bird_species"]
+          especie: string
           especie_id?: string | null
           fecha_cesion?: string | null
           fecha_muerte?: string | null
@@ -120,7 +138,7 @@ export type Database = {
           comprador_id?: string | null
           comprador_texto?: string | null
           created_at?: string
-          especie?: Database["public"]["Enums"]["bird_species"]
+          especie?: string
           especie_id?: string | null
           fecha_cesion?: string | null
           fecha_muerte?: string | null
@@ -397,14 +415,6 @@ export type Database = {
     Enums: {
       animal_sex: "Macho" | "Hembra" | "Desconocido"
       animal_type: "bird" | "dog"
-      bird_species:
-        | "Guacamayo"
-        | "Lori"
-        | "Ninfa"
-        | "Yaco"
-        | "Cacatua"
-        | "Pirrura"
-        | "Amazona"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -534,15 +544,6 @@ export const Constants = {
     Enums: {
       animal_sex: ["Macho", "Hembra", "Desconocido"],
       animal_type: ["bird", "dog"],
-      bird_species: [
-        "Guacamayo",
-        "Lori",
-        "Ninfa",
-        "Yaco",
-        "Cacatua",
-        "Pirrura",
-        "Amazona",
-      ],
     },
   },
 } as const
