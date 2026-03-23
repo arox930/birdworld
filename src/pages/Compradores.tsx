@@ -34,60 +34,36 @@ function useBuyerAnimals() {
     queryFn: async () => {
       const { data: cessions, error } = await supabase
         .from("cessions")
-        .select("buyer_id, animal_id, animal_type, precio, fecha_cesion");
+        .select("buyer_id, animal_id, animal_type, precio, fecha_cesion")
+        .eq("animal_type", "bird");
       if (error) throw error;
 
-      const birdIds = cessions.filter(c => c.animal_type === "bird").map(c => c.animal_id);
-      const dogIds = cessions.filter(c => c.animal_type === "dog").map(c => c.animal_id);
+      const birdIds = cessions.map(c => c.animal_id);
 
-      const [birdsRes, dogsRes] = await Promise.all([
-        birdIds.length > 0
-          ? supabase.from("birds").select("id, especie, anilla, microchip, numero_cites, id_miteco, sexo, comentarios, especie_id, species_catalog:especie_id(nombre_especie)").in("id", birdIds)
-          : { data: [] },
-        dogIds.length > 0
-          ? supabase.from("dogs").select("id, nombre, raza, color, sexo, microchip, pedigree, comentarios").in("id", dogIds)
-          : { data: [] },
-      ]);
+      const birdsRes = birdIds.length > 0
+        ? await supabase.from("birds").select("id, especie, anilla, microchip, numero_cites, id_miteco, sexo, comentarios, especie_id, species_catalog:especie_id(nombre_especie)").in("id", birdIds)
+        : { data: [] };
 
       const birdsMap = new Map((birdsRes.data ?? []).map(b => [b.id, b]));
-      const dogsMap = new Map((dogsRes.data ?? []).map(d => [d.id, d]));
 
       const result: Record<string, AnimalInfo[]> = {};
       for (const c of cessions) {
         if (!result[c.buyer_id]) result[c.buyer_id] = [];
-        if (c.animal_type === "bird") {
-          const bird = birdsMap.get(c.animal_id);
-          result[c.buyer_id].push({
-            id: c.animal_id,
-            type: "bird",
-            label: bird ? getSpeciesDisplayName(bird.especie as any) : "Ave",
-            fecha_cesion: c.fecha_cesion,
-            precio: c.precio,
-            anilla: bird?.anilla,
-            microchip: bird?.microchip,
-            numero_cites: bird?.numero_cites,
-            id_miteco: bird?.id_miteco,
-            sexo: bird?.sexo,
-            especie_nombre: (bird as any)?.species_catalog?.nombre_especie,
-            comentarios: bird?.comentarios,
-          });
-        } else {
-          const dog = dogsMap.get(c.animal_id);
-          result[c.buyer_id].push({
-            id: c.animal_id,
-            type: "dog",
-            label: dog?.nombre || "Perro",
-            fecha_cesion: c.fecha_cesion,
-            precio: c.precio,
-            nombre: dog?.nombre,
-            raza: dog?.raza,
-            color: dog?.color,
-            sexo: dog?.sexo,
-            microchip: dog?.microchip,
-            pedigree: dog?.pedigree,
-            comentarios: dog?.comentarios,
-          });
-        }
+        const bird = birdsMap.get(c.animal_id);
+        result[c.buyer_id].push({
+          id: c.animal_id,
+          type: "bird",
+          label: bird ? getSpeciesDisplayName(bird.especie as any) : "Ave",
+          fecha_cesion: c.fecha_cesion,
+          precio: c.precio,
+          anilla: bird?.anilla,
+          microchip: bird?.microchip,
+          numero_cites: bird?.numero_cites,
+          id_miteco: bird?.id_miteco,
+          sexo: bird?.sexo,
+          especie_nombre: (bird as any)?.species_catalog?.nombre_especie,
+          comentarios: bird?.comentarios,
+        });
       }
       return result;
     },
