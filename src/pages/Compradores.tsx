@@ -282,24 +282,12 @@ export default function Compradores() {
                                     <Badge variant="outline" className="ml-auto text-[10px]">{a.precio.toFixed(2)} €</Badge>
                                   </div>
                                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                                    {a.type === "bird" ? (
-                                      <>
-                                        {a.especie_nombre && <div><span className="text-muted-foreground">Especie:</span> <span className="italic">{a.especie_nombre}</span></div>}
-                                        <div><span className="text-muted-foreground">Sexo:</span> {a.sexo || "—"}</div>
-                                        {a.anilla && <div><span className="text-muted-foreground">Anilla:</span> {a.anilla}</div>}
-                                        {a.microchip && <div><span className="text-muted-foreground">Microchip:</span> {a.microchip}</div>}
-                                        {a.numero_cites && <div><span className="text-muted-foreground">CITES:</span> {a.numero_cites}</div>}
-                                        {a.id_miteco && <div><span className="text-muted-foreground">MITECO:</span> {a.id_miteco}</div>}
-                                      </>
-                                    ) : (
-                                      <>
-                                        {a.raza && <div><span className="text-muted-foreground">Raza:</span> {a.raza}</div>}
-                                        <div><span className="text-muted-foreground">Sexo:</span> {a.sexo || "—"}</div>
-                                        {a.color && <div><span className="text-muted-foreground">Color:</span> {a.color}</div>}
-                                        {a.microchip && <div><span className="text-muted-foreground">Microchip:</span> {a.microchip}</div>}
-                                        {a.pedigree && <div><span className="text-muted-foreground">Pedigree:</span> {a.pedigree}</div>}
-                                      </>
-                                    )}
+                                    {a.especie_nombre && <div><span className="text-muted-foreground">Especie:</span> <span className="italic">{a.especie_nombre}</span></div>}
+                                    <div><span className="text-muted-foreground">Sexo:</span> {a.sexo || "—"}</div>
+                                    {a.anilla && <div><span className="text-muted-foreground">Anilla:</span> {a.anilla}</div>}
+                                    {a.microchip && <div><span className="text-muted-foreground">Microchip:</span> {a.microchip}</div>}
+                                    {a.numero_cites && <div><span className="text-muted-foreground">CITES:</span> {a.numero_cites}</div>}
+                                    {a.id_miteco && <div><span className="text-muted-foreground">MITECO:</span> {a.id_miteco}</div>}
                                     <div><span className="text-muted-foreground">Cesión:</span> {format(new Date(a.fecha_cesion + "T00:00:00"), "dd-MM-yyyy")}</div>
                                   </div>
                                   {a.comentarios && (
