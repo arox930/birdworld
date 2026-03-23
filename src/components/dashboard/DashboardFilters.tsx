@@ -1,12 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Constants } from "@/integrations/supabase/types";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
 import { Filter, X } from "lucide-react";
 import type { DashboardFilters as Filters } from "@/hooks/useDashboardData";
-
-const BIRD_SPECIES = Constants.public.Enums.bird_species;
+import { useBirdCommonNames } from "@/hooks/useBirdCommonNames";
 
 type Props = {
   filters: Filters;
@@ -14,6 +12,8 @@ type Props = {
 };
 
 export function DashboardFiltersBar({ filters, onChange }: Props) {
+  const { data: commonNames = [] } = useBirdCommonNames();
+
   const update = (partial: Partial<Filters>) => {
     onChange({ ...filters, ...partial });
   };
@@ -41,8 +41,8 @@ export function DashboardFiltersBar({ filters, onChange }: Props) {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todas las especies</SelectItem>
-          {BIRD_SPECIES.map(s => (
-            <SelectItem key={s} value={s}>{getSpeciesDisplayName(s)}</SelectItem>
+          {commonNames.map(s => (
+            <SelectItem key={s.id} value={s.nombre}>{getSpeciesDisplayName(s.nombre)}</SelectItem>
           ))}
         </SelectContent>
       </Select>

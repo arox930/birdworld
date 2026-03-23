@@ -5,9 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
-import type { Database } from "@/integrations/supabase/types";
-
-type BirdSpecies = Database["public"]["Enums"]["bird_species"];
 
 type BirdOption = {
   id: string;
@@ -18,7 +15,7 @@ type BirdOption = {
 };
 
 type Props = {
-  nombreComun: BirdSpecies;
+  nombreComun: string;
   value: string | null;
   onChange: (id: string | null) => void;
   excludeId?: string;
@@ -31,7 +28,6 @@ export function BirdParejaSearch({ nombreComun, value, onChange, excludeId }: Pr
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const debouncedSearch = useDebounce(search, 300);
 
-  // Load selected bird label
   useEffect(() => {
     if (!value) { setSelectedLabel(null); return; }
     supabase.from("birds").select("anilla, microchip, sexo").eq("id", value).single()
@@ -40,7 +36,6 @@ export function BirdParejaSearch({ nombreComun, value, onChange, excludeId }: Pr
       });
   }, [value]);
 
-  // Search birds
   useEffect(() => {
     if (!open) return;
     const fetchBirds = async () => {

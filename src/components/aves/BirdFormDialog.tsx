@@ -15,27 +15,7 @@ import { ZonaCombobox } from "@/components/shared/ZonaCombobox";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
 import { BirdParejaSearch } from "./BirdParejaSearch";
 
-const COMMON_NAMES = Constants.public.Enums.bird_species;
 const SEXES = Constants.public.Enums.animal_sex;
-
-const birdSchema = z.object({
-  especie: z.enum(COMMON_NAMES as unknown as [string, ...string[]]),
-  especie_id: z.string().min(1, "Selecciona una especie"),
-  sexo: z.enum(SEXES as unknown as [string, ...string[]]),
-  fecha_nacimiento: z.string().min(1, "Requerido"),
-  id_miteco: z.string().max(100).optional().or(z.literal("")),
-  microchip: z.string().max(100).optional().or(z.literal("")),
-  anilla: z.string().max(100).optional().or(z.literal("")),
-  numero_cites: z.string().max(100).optional().or(z.literal("")),
-  zona: z.string().max(200).optional().or(z.literal("")),
-  padre_externo: z.string().max(200).optional().or(z.literal("")),
-  madre_externa: z.string().max(200).optional().or(z.literal("")),
-  comentarios: z.string().max(2000).optional().or(z.literal("")),
-  fecha_muerte: z.string().optional().or(z.literal("")),
-  pareja_id: z.string().optional().or(z.literal("")),
-});
-
-type BirdFormValues = z.infer<typeof birdSchema>;
 
 type Props = {
   open: boolean;
@@ -44,13 +24,33 @@ type Props = {
   onSubmit: (data: BirdInsert) => void;
   isLoading?: boolean;
   prefillData?: Record<string, string> | null;
+  commonNames?: string[];
 };
 
-export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, prefillData }: Props) {
+export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, prefillData, commonNames = [] }: Props) {
+  const birdSchema = z.object({
+    especie: z.string().min(1, "Selecciona un nombre común"),
+    especie_id: z.string().min(1, "Selecciona una especie"),
+    sexo: z.enum(SEXES as unknown as [string, ...string[]]),
+    fecha_nacimiento: z.string().min(1, "Requerido"),
+    id_miteco: z.string().max(100).optional().or(z.literal("")),
+    microchip: z.string().max(100).optional().or(z.literal("")),
+    anilla: z.string().max(100).optional().or(z.literal("")),
+    numero_cites: z.string().max(100).optional().or(z.literal("")),
+    zona: z.string().max(200).optional().or(z.literal("")),
+    padre_externo: z.string().max(200).optional().or(z.literal("")),
+    madre_externa: z.string().max(200).optional().or(z.literal("")),
+    comentarios: z.string().max(2000).optional().or(z.literal("")),
+    fecha_muerte: z.string().optional().or(z.literal("")),
+    pareja_id: z.string().optional().or(z.literal("")),
+  });
+
+  type BirdFormValues = z.infer<typeof birdSchema>;
+
   const form = useForm<BirdFormValues>({
     resolver: zodResolver(birdSchema),
     defaultValues: {
-      especie: bird?.especie ?? "Guacamayo",
+      especie: bird?.especie ?? (commonNames[0] || ""),
       especie_id: (bird as any)?.especie_id ?? "",
       sexo: bird?.sexo ?? "Desconocido",
       fecha_nacimiento: bird?.fecha_nacimiento ?? "",
@@ -71,7 +71,6 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
   const { data: speciesList } = useBirdSpeciesCatalog(selectedCommonName);
   const [pendingSpeciesMatch, setPendingSpeciesMatch] = useState<string | null>(null);
 
-  // Auto-match AI-extracted species name to especie_id
   useEffect(() => {
     if (pendingSpeciesMatch && speciesList && speciesList.length > 0) {
       const normalise = (s: string) => s.toLowerCase().trim();
@@ -82,11 +81,11 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
       setPendingSpeciesMatch(null);
     }
   }, [pendingSpeciesMatch, speciesList]);
+
   useEffect(() => {
     if (open) {
       const pf = prefillData ?? {};
-      // AI extraction sends nombre_comun (common name) and especie (scientific name text)
-      const commonName = (pf.nombre_comun as any) ?? (pf.especie as any) ?? bird?.especie ?? "Guacamayo";
+      const commonName = (pf.nombre_comun as any) ?? (pf.especie as any) ?? bird?.especie ?? (commonNames[0] || "");
       form.reset({
         especie: commonName,
         especie_id: (pf.especie_id as any) ?? (bird as any)?.especie_id ?? "",
@@ -103,7 +102,6 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
         fecha_muerte: bird?.fecha_muerte ?? "",
         pareja_id: bird?.pareja_id ?? "",
       });
-      // If AI provided a species name, try to auto-match especie_id after speciesList loads
       if (pf.especie && !pf.especie_id) {
         setPendingSpeciesMatch(pf.especie);
       } else {
@@ -112,7 +110,6 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
     }
   }, [open, bird, prefillData]);
 
-  // Reset especie_id when common name changes (unless it's the initial load)
   useEffect(() => {
     const currentSpeciesId = form.getValues("especie_id");
     if (speciesList && currentSpeciesId) {
@@ -156,9 +153,9 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
                 <FormItem>
                   <FormLabel>Nombre común *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Selecciona nombre común" /></SelectTrigger></FormControl>
                     <SelectContent>
-                      {COMMON_NAMES.map(s => <SelectItem key={s} value={s}>{getSpeciesDisplayName(s)}</SelectItem>)}
+                      {commonNames.map(s => <SelectItem key={s} value={s}>{getSpeciesDisplayName(s)}</SelectItem>)}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -263,7 +260,7 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
                 <FormLabel>Pareja</FormLabel>
                 <FormControl>
                   <BirdParejaSearch
-                    nombreComun={selectedCommonName as any}
+                    nombreComun={selectedCommonName}
                     value={field.value || null}
                     onChange={(id) => field.onChange(id ?? "")}
                     excludeId={bird?.id}
