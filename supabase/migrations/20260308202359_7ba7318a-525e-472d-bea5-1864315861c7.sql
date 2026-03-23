@@ -1,0 +1,1 @@
+ALTER TABLE public.buyers ADD COLUMN recurrente boolean NOT NULL DEFAULT false;

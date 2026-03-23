@@ -1,0 +1,1 @@
+ALTER TABLE public.dogs ADD COLUMN litter_id uuid REFERENCES public.litters(id) ON DELETE SET NULL;

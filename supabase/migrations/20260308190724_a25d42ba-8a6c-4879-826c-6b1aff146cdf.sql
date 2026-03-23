@@ -1,0 +1,1 @@
+ALTER TABLE public.dogs ADD COLUMN zona text DEFAULT NULL;
