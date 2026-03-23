@@ -126,11 +126,7 @@ export function MapZoneRect({
             onDragStart={(e) => onAnimalDragStart(e, a)}
             className="flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded bg-background/80 border border-border cursor-grab active:cursor-grabbing shadow-sm"
           >
-            {a.type === "bird" ? (
-              <Bird className="h-3 w-3 text-primary" />
-            ) : (
-              <Dog className="h-3 w-3 text-primary" />
-            )}
+            <Bird className="h-3 w-3 text-primary" />
             <span className="truncate max-w-[80px]">{a.label}</span>
             {a.pareja_id && <Heart className="h-2.5 w-2.5 text-pink-500 fill-pink-500" />}
           </div>
