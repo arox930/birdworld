@@ -1,4 +1,4 @@
-import { Bird, Dog, Plus, MapPin, FolderPlus } from "lucide-react";
+import { Bird, Plus, MapPin, FolderPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { MapZone } from "@/hooks/useMapZones";
