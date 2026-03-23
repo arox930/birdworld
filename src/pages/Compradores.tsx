@@ -277,11 +277,7 @@ export default function Compradores() {
                               {animals.map((a) => (
                                 <div key={a.id} className="rounded-md border border-border bg-card p-3 text-sm space-y-2">
                                   <div className="flex items-center gap-2">
-                                    {a.type === "bird" ? (
-                                      <Bird className="h-4 w-4 text-primary shrink-0" />
-                                    ) : (
-                                      <Dog className="h-4 w-4 text-primary shrink-0" />
-                                    )}
+                                    <Bird className="h-4 w-4 text-primary shrink-0" />
                                     <span className="font-medium">{a.label}</span>
                                     <Badge variant="outline" className="ml-auto text-[10px]">{a.precio.toFixed(2)} €</Badge>
                                   </div>
