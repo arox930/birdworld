@@ -15,22 +15,16 @@ import { format } from "date-fns";
 
 type AnimalInfo = {
   id: string;
-  type: "bird" | "dog";
+  type: "bird";
   label: string;
   fecha_cesion: string;
   precio: number;
-  // Bird fields
   anilla?: string | null;
   microchip?: string | null;
   numero_cites?: string | null;
   id_miteco?: string | null;
   sexo?: string;
   especie_nombre?: string | null;
-  // Dog fields
-  nombre?: string | null;
-  raza?: string | null;
-  color?: string | null;
-  pedigree?: string | null;
   comentarios?: string | null;
 };
 
