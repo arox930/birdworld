@@ -44,6 +44,7 @@ export function BirdParejaSearch({ nombreComun, value, onChange, excludeId }: Pr
         .select("id, anilla, microchip, sexo, especie_id")
         .eq("especie", nombreComun)
         .is("fecha_muerte", null)
+        .is("fecha_cesion", null)
         .limit(20);
 
       if (excludeId) query = query.neq("id", excludeId);
