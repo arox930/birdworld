@@ -44,6 +44,7 @@ export function usePreviewCession() {
       animal_type: "bird" | "dog";
       buyer_id: string;
       precio: number;
+      buyer_override?: { nombre: string; apellidos: string; dni: string; domicilio: string };
     }) => {
       const { data, error } = await supabase.functions.invoke("generate-cession-pdf", {
         body: { ...params, preview_only: true },

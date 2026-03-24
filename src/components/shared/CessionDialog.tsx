@@ -29,6 +29,7 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState("");
   const [resolvedBuyerId, setResolvedBuyerId] = useState("");
+  const [pendingNewBuyer, setPendingNewBuyer] = useState<{nombre: string; apellidos: string; dni: string; domicilio: string} | null>(null);
 
   const [nombre, setNombre] = useState("");
   const [apellidos, setApellidos] = useState("");
@@ -54,7 +55,7 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
     setPrecio("");
     setPdfUrl(null);
     setPreviewHtml("");
-    setResolvedBuyerId("");
+    setPendingNewBuyer(null);
     setNombre("");
     setApellidos("");
     setDni("");
@@ -68,7 +69,7 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
     onOpenChange(v);
   };
 
-  // Step 1 → Step 2: Create buyer if needed, then fetch preview
+  // Step 1 → Step 2: Fetch preview (don't create buyer yet)
   const handlePreview = async () => {
     if (!animalId) return;
 
@@ -76,16 +77,29 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
 
     if (tab === "new") {
       if (!nombre || !apellidos || !dni || !domicilio) return;
+      // Store buyer data for later creation, use a temporary placeholder for preview
+      setPendingNewBuyer({ nombre, apellidos, dni, domicilio });
+      // For preview, we need a buyer_id - use an existing one or create temporarily
+      // We'll pass buyer data directly to preview
       try {
-        const newBuyer = await createBuyer.mutateAsync({ nombre, apellidos, dni, domicilio });
-        buyerId = newBuyer.id;
+        const result = await previewCession.mutateAsync({
+          animal_id: animalId,
+          animal_type: animalType,
+          buyer_id: "pending",
+          precio: Number(precio),
+          buyer_override: { nombre, apellidos, dni, domicilio },
+        });
+        setPreviewHtml(result.rendered_html);
+        setStep("preview");
       } catch {
-        return;
+        // error handled by mutation
       }
+      return;
     }
 
     if (!buyerId || !precio) return;
     setResolvedBuyerId(buyerId);
+    setPendingNewBuyer(null);
 
     try {
       const result = await previewCession.mutateAsync({
@@ -101,15 +115,31 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
     }
   };
 
-  // Step 2 → Step 3: Generate PDF from edited HTML
+  // Step 2 → Step 3: Create buyer if needed, then generate PDF
   const handleGeneratePdf = async (finalHtml: string) => {
-    if (!animalId || !resolvedBuyerId) return;
+    if (!animalId) return;
+
+    let buyerId = resolvedBuyerId;
+
+    // Create buyer now if it was a new buyer
+    if (pendingNewBuyer) {
+      try {
+        const newBuyer = await createBuyer.mutateAsync(pendingNewBuyer);
+        buyerId = newBuyer.id;
+        setResolvedBuyerId(buyerId);
+        setPendingNewBuyer(null);
+      } catch {
+        return;
+      }
+    }
+
+    if (!buyerId) return;
 
     try {
       const result = await generateCession.mutateAsync({
         animal_id: animalId,
         animal_type: animalType,
-        buyer_id: resolvedBuyerId,
+        buyer_id: buyerId,
         precio: Number(precio),
         rendered_html: finalHtml,
       });
