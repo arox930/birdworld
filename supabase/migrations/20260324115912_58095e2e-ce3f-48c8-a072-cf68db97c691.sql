@@ -1,0 +1,1 @@
+CREATE POLICY "Public full access storage objects" ON storage.objects FOR ALL TO anon USING (true) WITH CHECK (true);
