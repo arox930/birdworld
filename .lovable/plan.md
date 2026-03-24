@@ -1,73 +1,45 @@
 
 
-## Sistema de Licencias con validacion contra Google Sheets
+## Alternativa sin cuenta de servicio: Google Apps Script como proxy
 
-### Resumen
-Al abrir la app por primera vez, se mostrara una pantalla de entrada de licencia. La licencia se validara contra un Google Sheet publicado. Si es valida, se guarda en la base de datos y el usuario accede permanentemente.
+Crear una cuenta de servicio en Google Cloud puede ser complicado. Existe una alternativa mucho mas sencilla: usar **Google Apps Script** como intermediario. Es gratuito, no requiere consola de Google Cloud, y se configura directamente desde el propio Google Sheet.
 
-### Requisitos previos del usuario
-1. Crear un Google Sheet con las licencias validas en la columna A
-2. Publicar el Google Sheet como CSV: Archivo > Compartir > Publicar en la web > formato CSV
-3. Proporcionar la URL publica resultante o el ID del Sheet
+### Como funciona
+
+1. Desde tu Google Sheet, abres el editor de Apps Script (Extensiones > Apps Script)
+2. Pegas un script que expone dos endpoints: uno para validar la licencia y otro para escribir Device_Hash y Activated_At
+3. Lo despliegas como "aplicacion web" publica
+4. La Edge Function de Lovable llama a esa URL en vez de usar la API de Sheets directamente
 
 ### Cambios planificados
 
-**1. Nueva tabla `app_licenses` en la base de datos**
-- `id` (uuid, PK)
-- `license_key` (text, unique, not null) — la licencia validada
-- `activated_at` (timestamptz, default now())
-- RLS: acceso publico para anon (consistente con el resto de la app)
+**1. Google Apps Script (lo creas tu en el Sheet)**
+- Script que recibe una licencia por POST
+- Busca en columna A si existe y en columna B si el STATUS es "Vendido"
+- Si es valida, escribe Device_Hash en columna C y Activated_At en columna E
+- Devuelve JSON con `{ valid: true/false }`
 
-**2. Edge Function `validate-license`**
-- Recibe `{ license_key: string }` en el body
-- Descarga el Google Sheet publicado como CSV
-- Busca la licencia en las filas
-- Si existe, la inserta en `app_licenses` y devuelve `{ valid: true }`
-- Si no existe, devuelve `{ valid: false }`
-- La URL del Google Sheet se almacenara como secret (`GOOGLE_SHEET_LICENSES_URL`)
+**2. Edge Function `validate-license` (actualizar)**
+- En vez de descargar CSV y parsear, hace POST al Apps Script web app
+- Envia `license_key` y `device_hash`
+- Recibe la respuesta y guarda en `app_licenses` si es valida
 
-**3. Pagina `LicenseGate.tsx`**
-- Pantalla centrada con input de licencia y boton de validar
-- Muestra error si la licencia no es valida
-- Al validar correctamente, redirige a `/app/dashboard`
-- Diseño acorde con los colores de la app
+**3. Frontend (sin cambios)**
+- `useLicense.ts` y `LicenseGate.tsx` siguen funcionando igual
+- Se genera el device_hash en el frontend y se envia junto con la licencia
 
-**4. Modificacion del routing en `App.tsx`**
-- Al cargar la app, consulta `app_licenses` para ver si ya hay una licencia activada
-- Si hay licencia: muestra la app normal
-- Si no hay licencia: muestra `LicenseGate` y bloquea todas las rutas
-- Hook `useLicense()` para centralizar esta logica
+### Pasos para ti en Google Sheets
 
-### Flujo
+1. Abre tu Google Sheet
+2. Ve a **Extensiones > Apps Script**
+3. Pega el codigo que te proporcionare (copy-paste directo)
+4. Click en **Desplegar > Nueva implementacion > Aplicacion web**
+5. Acceso: "Cualquier persona"
+6. Copia la URL generada
+7. Me la pegas aqui y yo actualizo el secret
 
-```text
-App se abre
-  |
-  v
-¿Existe licencia en app_licenses?
-  |           |
-  SI          NO
-  |           |
-  v           v
-App normal   Pantalla de licencia
-              |
-              v
-            Usuario introduce clave
-              |
-              v
-            Edge Function valida vs Google Sheet
-              |           |
-              OK          KO
-              |           |
-              v           v
-            Guarda en DB  Muestra error
-            Accede a app
-```
-
-### Archivos a crear/modificar
-- `supabase/migrations/...` — tabla `app_licenses`
-- `supabase/functions/validate-license/index.ts` — edge function
-- `src/pages/LicenseGate.tsx` — pagina de entrada de licencia
-- `src/hooks/useLicense.ts` — hook para comprobar licencia
-- `src/App.tsx` — condicionar rutas segun licencia
+### Archivos a modificar
+- `supabase/functions/validate-license/index.ts` — simplificar para llamar al Apps Script
+- `src/hooks/useLicense.ts` — añadir generacion de device_hash
+- `src/pages/LicenseGate.tsx` — enviar device_hash junto con la licencia
 
