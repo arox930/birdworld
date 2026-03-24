@@ -44,6 +44,24 @@ export type Database = {
         }
         Relationships: []
       }
+      app_licenses: {
+        Row: {
+          activated_at: string
+          id: string
+          license_key: string
+        }
+        Insert: {
+          activated_at?: string
+          id?: string
+          license_key: string
+        }
+        Update: {
+          activated_at?: string
+          id?: string
+          license_key?: string
+        }
+        Relationships: []
+      }
       bird_common_names: {
         Row: {
           created_at: string
