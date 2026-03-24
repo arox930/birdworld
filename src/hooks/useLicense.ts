@@ -1,6 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+function getDeviceHash(): string {
+  const key = "app_device_hash";
+  let hash = localStorage.getItem(key);
+  if (!hash) {
+    hash = crypto.randomUUID();
+    localStorage.setItem(key, hash);
+  }
+  return hash;
+}
+
 export function useLicense() {
   const queryClient = useQueryClient();
 
@@ -19,8 +29,9 @@ export function useLicense() {
 
   const validateMutation = useMutation({
     mutationFn: async (licenseKey: string) => {
+      const deviceHash = getDeviceHash();
       const { data, error } = await supabase.functions.invoke("validate-license", {
-        body: { license_key: licenseKey },
+        body: { license_key: licenseKey, device_hash: deviceHash },
       });
       if (error) throw error;
       if (!data.valid) {
