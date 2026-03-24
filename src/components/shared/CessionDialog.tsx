@@ -29,6 +29,7 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState("");
   const [resolvedBuyerId, setResolvedBuyerId] = useState("");
+  const [pendingNewBuyer, setPendingNewBuyer] = useState<{nombre: string; apellidos: string; dni: string; domicilio: string} | null>(null);
 
   const [nombre, setNombre] = useState("");
   const [apellidos, setApellidos] = useState("");
