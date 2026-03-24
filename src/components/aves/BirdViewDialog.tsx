@@ -25,6 +25,7 @@ export function BirdViewDialog({ open, onOpenChange, bird }: Props) {
   const estado = bird.fecha_muerte ? "Muerto" : bird.fecha_cesion ? "Cedido" : "Vivo";
   const speciesCatalog = (bird as any).species_catalog;
   const buyer = (bird as any).buyers;
+  const pareja = (bird as any).pareja;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -53,6 +54,7 @@ export function BirdViewDialog({ open, onOpenChange, bird }: Props) {
           {bird.comprador_texto && <Field label="Comprador (texto)" value={bird.comprador_texto} />}
           {bird.padre_externo && <Field label="Padre externo" value={bird.padre_externo} />}
           {bird.madre_externa && <Field label="Madre externa" value={bird.madre_externa} />}
+          {pareja && <Field label="Pareja" value={`${getSpeciesDisplayName(pareja.especie)} — ${pareja.anilla || pareja.microchip || "s/id"}`} />}
         </div>
         {bird.comentarios && (
           <div>
