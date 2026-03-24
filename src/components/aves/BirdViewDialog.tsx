@@ -25,6 +25,7 @@ export function BirdViewDialog({ open, onOpenChange, bird }: Props) {
   const estado = bird.fecha_muerte ? "Muerto" : bird.fecha_cesion ? "Cedido" : "Vivo";
   const speciesCatalog = (bird as any).species_catalog;
   const buyer = (bird as any).buyers;
+  const pareja = (bird as any).pareja;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
