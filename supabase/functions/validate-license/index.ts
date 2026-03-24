@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { license_key } = await req.json();
+    const { license_key, device_hash } = await req.json();
     if (!license_key || typeof license_key !== "string") {
       return new Response(JSON.stringify({ valid: false, error: "License key is required" }), {
         status: 400,
@@ -20,34 +20,36 @@ Deno.serve(async (req) => {
       });
     }
 
-    const sheetUrl = Deno.env.get("GOOGLE_SHEET_LICENSES_URL");
-    if (!sheetUrl) {
+    const appsScriptUrl = Deno.env.get("GOOGLE_SHEET_LICENSES_URL");
+    if (!appsScriptUrl) {
       return new Response(JSON.stringify({ valid: false, error: "License service not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Fetch the Google Sheet as CSV
-    const csvResponse = await fetch(sheetUrl);
-    if (!csvResponse.ok) {
+    // Call Google Apps Script web app
+    const scriptResponse = await fetch(appsScriptUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        license_key: license_key.trim(),
+        device_hash: device_hash || "",
+      }),
+      redirect: "follow",
+    });
+
+    if (!scriptResponse.ok) {
       return new Response(JSON.stringify({ valid: false, error: "Could not reach license server" }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const csvText = await csvResponse.text();
-    const lines = csvText.split("\n").map((l) => l.trim()).filter(Boolean);
-    const trimmedKey = license_key.trim();
-    const found = lines.some((line) => {
-      // Handle CSV cells that might be quoted
-      const cell = line.replace(/^"|"$/g, "").trim();
-      return cell === trimmedKey;
-    });
+    const result = await scriptResponse.json();
 
-    if (!found) {
-      return new Response(JSON.stringify({ valid: false }), {
+    if (!result.valid) {
+      return new Response(JSON.stringify({ valid: false, error: result.error || undefined }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -61,7 +63,7 @@ Deno.serve(async (req) => {
 
     const { error: insertError } = await supabase
       .from("app_licenses")
-      .upsert({ license_key: trimmedKey }, { onConflict: "license_key" });
+      .upsert({ license_key: license_key.trim() }, { onConflict: "license_key" });
 
     if (insertError) {
       console.error("Insert error:", insertError);
