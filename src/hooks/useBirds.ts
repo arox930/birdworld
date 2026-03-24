@@ -25,7 +25,7 @@ export function useBirds(filters: BirdFilters = {}) {
     queryFn: async () => {
       let query = supabase
         .from("birds")
-        .select("*, buyers:comprador_id(nombre, apellidos), species_catalog:especie_id(id, nombre_comun, nombre_especie)", { count: "exact" });
+        .select("*, buyers:comprador_id(nombre, apellidos), species_catalog:especie_id(id, nombre_comun, nombre_especie), pareja:pareja_id(id, anilla, microchip, especie)", { count: "exact" });
 
       if (search) {
         query = query.or(

@@ -54,6 +54,7 @@ export function BirdViewDialog({ open, onOpenChange, bird }: Props) {
           {bird.comprador_texto && <Field label="Comprador (texto)" value={bird.comprador_texto} />}
           {bird.padre_externo && <Field label="Padre externo" value={bird.padre_externo} />}
           {bird.madre_externa && <Field label="Madre externa" value={bird.madre_externa} />}
+          {pareja && <Field label="Pareja" value={`${getSpeciesDisplayName(pareja.especie)} — ${pareja.anilla || pareja.microchip || "s/id"}`} />}
         </div>
         {bird.comentarios && (
           <div>
