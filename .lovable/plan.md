@@ -1,54 +1,73 @@
 
 
-# Loromanía – Plan de Implementación
+## Sistema de Licencias con validacion contra Google Sheets
 
-## Visión
-App de gestión de criadero (aves y perros) con login único admin, CRUD completo, IA para extracción de datos desde imágenes, documentos de cesión en PDF, y dashboard de métricas.
+### Resumen
+Al abrir la app por primera vez, se mostrara una pantalla de entrada de licencia. La licencia se validara contra un Google Sheet publicado. Si es valida, se guarda en la base de datos y el usuario accede permanentemente.
 
----
+### Requisitos previos del usuario
+1. Crear un Google Sheet con las licencias validas en la columna A
+2. Publicar el Google Sheet como CSV: Archivo > Compartir > Publicar en la web > formato CSV
+3. Proporcionar la URL publica resultante o el ID del Sheet
 
-## Fase 1: Base y Autenticación
-- Layout mobile-first con sidebar/nav: rutas `/login`, `/app/dashboard`, `/app/aves`, `/app/perros`
-- Login con usuario único (JuanFrancisco / Negroblanco1) usando Supabase Auth con signup deshabilitado
-- Rutas protegidas que redirigen a login si no hay sesión
+### Cambios planificados
 
-## Fase 2: Base de Datos
-- Tablas: `birds`, `dogs`, `buyers`, `cessions`, `vaccines`, `litters`
-- Campos según el modelo de datos especificado (parentales internos/externos, enums de especie, etc.)
-- RLS: solo el usuario admin autenticado puede leer/escribir
-- Storage buckets: `uploads` (imágenes) y `cessions` (PDFs)
+**1. Nueva tabla `app_licenses` en la base de datos**
+- `id` (uuid, PK)
+- `license_key` (text, unique, not null) — la licencia validada
+- `activated_at` (timestamptz, default now())
+- RLS: acceso publico para anon (consistente con el resto de la app)
 
-## Fase 3: CRUD Aves
-- Selector por categoría (Guacamayos, Loris, Ninfas, Yacos, Cacatúas, Pirruras, Amazonas)
-- Tabla con búsqueda (microchip, anilla, especie), filtros (sexo, estado, fechas), paginación server-side
-- Formulario de alta/edición con validaciones
-- Eliminación con modal de confirmación mostrando ficha del ejemplar
-- Acciones por fila: Modificar, Eliminar, Crear Documento de Cesión
+**2. Edge Function `validate-license`**
+- Recibe `{ license_key: string }` en el body
+- Descarga el Google Sheet publicado como CSV
+- Busca la licencia en las filas
+- Si existe, la inserta en `app_licenses` y devuelve `{ valid: true }`
+- Si no existe, devuelve `{ valid: false }`
+- La URL del Google Sheet se almacenara como secret (`GOOGLE_SHEET_LICENSES_URL`)
 
-## Fase 4: CRUD Perros
-- Tabla con búsqueda y filtros similar a aves
-- Formulario alta/edición con campos específicos (raza, color, pedigree, nombre)
-- Acciones por fila: Modificar, Eliminar, Cesión, Ver vacunación, Ver camadas
+**3. Pagina `LicenseGate.tsx`**
+- Pantalla centrada con input de licencia y boton de validar
+- Muestra error si la licencia no es valida
+- Al validar correctamente, redirige a `/app/dashboard`
+- Diseño acorde con los colores de la app
 
-## Fase 5: Upload + IA Extracción
-- Componente de subida de imagen/documento al bucket `uploads`
-- Edge function `extractAnimalFromImage` usando Lovable AI para analizar imágenes y extraer campos (microchip, anilla, CITES, fechas, especie/raza)
-- UI que muestra campos extraídos con indicador de confianza, usuario valida antes de guardar
+**4. Modificacion del routing en `App.tsx`**
+- Al cargar la app, consulta `app_licenses` para ver si ya hay una licencia activada
+- Si hay licencia: muestra la app normal
+- Si no hay licencia: muestra `LicenseGate` y bloquea todas las rutas
+- Hook `useLicense()` para centralizar esta logica
 
-## Fase 6: Documento de Cesión (PDF)
-- Modal al crear cesión: formulario de comprador (nombre, apellidos, DNI, domicilio) + precio
-- Registro en tabla `buyers` y `cessions`
-- Edge function `generateCessionPDF` que genera PDF autocompletado con datos del ejemplar, comprador, precio y fecha
-- PDF guardado en bucket `cessions`, link devuelto y asociado a la cesión
-- Actualización automática del ejemplar: `fechaCesion` y `compradorId`
+### Flujo
 
-## Fase 7: Vacunas y Camadas
-- **Vacunas**: vista de historial por perro, formulario para añadir vacuna (fecha, descripción)
-- **Camadas**: vista por madre, formulario (fecha, nacidos, muertos en parto, machos, hembras, notas)
+```text
+App se abre
+  |
+  v
+¿Existe licencia en app_licenses?
+  |           |
+  SI          NO
+  |           |
+  v           v
+App normal   Pantalla de licencia
+              |
+              v
+            Usuario introduce clave
+              |
+              v
+            Edge Function valida vs Google Sheet
+              |           |
+              OK          KO
+              |           |
+              v           v
+            Guarda en DB  Muestra error
+            Accede a app
+```
 
-## Fase 8: Dashboard
-- Tarjetas KPI: dinero generado, aves vendidas, perros vendidos, ejemplares muertos
-- Filtro por rango de fechas
-- Rankings: parejas con más crías (aves), hembras con más cachorros (perros)
-- Gráficos con Recharts
+### Archivos a crear/modificar
+- `supabase/migrations/...` — tabla `app_licenses`
+- `supabase/functions/validate-license/index.ts` — edge function
+- `src/pages/LicenseGate.tsx` — pagina de entrada de licencia
+- `src/hooks/useLicense.ts` — hook para comprobar licencia
+- `src/App.tsx` — condicionar rutas segun licencia
 
