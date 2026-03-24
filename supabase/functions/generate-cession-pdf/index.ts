@@ -466,16 +466,23 @@ serve(async (req) => {
     const {
       animal_id, animal_type, buyer_id, precio,
       vendedor_nombre, vendedor_dni, vendedor_domicilio,
-      preview_only, rendered_html,
+      preview_only, rendered_html, buyer_override,
     } = await req.json();
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    const { data: buyer, error: buyerErr } = await supabase
-      .from("buyers").select("*").eq("id", buyer_id).single();
-    if (buyerErr) throw new Error(`Comprador no encontrado: ${buyerErr.message}`);
+    // For preview with new buyer, use buyer_override data instead of fetching from DB
+    let buyer: any;
+    if (buyer_override && preview_only) {
+      buyer = buyer_override;
+    } else {
+      const { data: buyerData, error: buyerErr } = await supabase
+        .from("buyers").select("*").eq("id", buyer_id).single();
+      if (buyerErr) throw new Error(`Comprador no encontrado: ${buyerErr.message}`);
+      buyer = buyerData;
+    }
 
     const todayISO = new Date().toISOString().slice(0, 10); // YYYY-MM-DD for DB
     const today = todayISO.split('-').reverse().join('-'); // DD-MM-YYYY for display

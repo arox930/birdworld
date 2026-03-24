@@ -115,15 +115,31 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
     }
   };
 
-  // Step 2 → Step 3: Generate PDF from edited HTML
+  // Step 2 → Step 3: Create buyer if needed, then generate PDF
   const handleGeneratePdf = async (finalHtml: string) => {
-    if (!animalId || !resolvedBuyerId) return;
+    if (!animalId) return;
+
+    let buyerId = resolvedBuyerId;
+
+    // Create buyer now if it was a new buyer
+    if (pendingNewBuyer) {
+      try {
+        const newBuyer = await createBuyer.mutateAsync(pendingNewBuyer);
+        buyerId = newBuyer.id;
+        setResolvedBuyerId(buyerId);
+        setPendingNewBuyer(null);
+      } catch {
+        return;
+      }
+    }
+
+    if (!buyerId) return;
 
     try {
       const result = await generateCession.mutateAsync({
         animal_id: animalId,
         animal_type: animalType,
-        buyer_id: resolvedBuyerId,
+        buyer_id: buyerId,
         precio: Number(precio),
         rendered_html: finalHtml,
       });
