@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Bird, Plus, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "react-i18next";
 import { BirdsTable } from "@/components/aves/BirdsTable";
 import { BirdsFilters } from "@/components/aves/BirdsFilters";
 import { BirdFormDialog } from "@/components/aves/BirdFormDialog";
@@ -22,6 +23,7 @@ import { cn } from "@/lib/utils";
 const PAGE_SIZE = 20;
 
 export default function Aves() {
+  const { t } = useTranslation();
   const [category, setCategory] = useState("all");
   const [search, setSearch] = useState("");
   const [sexo, setSexo] = useState("all");
@@ -94,7 +96,7 @@ export default function Aves() {
     const trimmed = newCommonName.trim();
     if (!trimmed) return;
     if (commonNames.some(cn => cn.nombre.toLowerCase() === trimmed.toLowerCase())) {
-      toast.error("Ya existe ese nombre común");
+      toast.error(t("birds.alreadyExists"));
       return;
     }
     createCommonName.mutate(trimmed, { onSuccess: () => setNewCommonName("") });
@@ -108,14 +110,14 @@ export default function Aves() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <Bird className="h-6 w-6 text-primary" />
-            Aves
+            {t("birds.title")}
           </h1>
           <p className="text-muted-foreground text-sm">
-            {totalCount} ejemplar{totalCount !== 1 ? "es" : ""} registrado{totalCount !== 1 ? "s" : ""}
+            {totalCount} {totalCount !== 1 ? t("birds.specimens") : t("birds.specimen")} {totalCount !== 1 ? t("birds.registeredPlural") : t("birds.registered")}
           </p>
         </div>
         <Button onClick={handleAdd} size="sm">
-          <Plus className="h-4 w-4 mr-1" /> Añadir
+          <Plus className="h-4 w-4 mr-1" /> {t("common.add")}
         </Button>
       </div>
 
@@ -132,7 +134,7 @@ export default function Aves() {
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             )}
           >
-            Todas
+            {t("common.allFem")}
           </button>
           {commonNamesList.map(name => (
             <div key={name} className="flex items-center gap-0.5">
@@ -158,7 +160,7 @@ export default function Aves() {
                   }
                 }}
                 className="px-1.5 py-1.5 rounded-r-full bg-muted text-muted-foreground hover:bg-destructive/20 hover:text-destructive transition-colors"
-                title="Eliminar nombre común"
+                title={t("birds.deleteCommonName")}
               >
                 <Trash2 className="h-3 w-3" />
               </button>
@@ -167,14 +169,14 @@ export default function Aves() {
         </div>
         <div className="flex gap-2 items-center">
           <Input
-            placeholder="Nuevo nombre común..."
+            placeholder={t("birds.newCommonName")}
             value={newCommonName}
             onChange={(e) => setNewCommonName(e.target.value)}
             className="h-8 text-xs max-w-xs"
             onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddCommonName())}
           />
           <Button size="sm" className="h-8 text-xs gap-1" onClick={handleAddCommonName} disabled={createCommonName.isPending}>
-            <Plus className="h-3 w-3" /> Añadir
+            <Plus className="h-3 w-3" /> {t("common.add")}
           </Button>
         </div>
       </div>
@@ -182,7 +184,7 @@ export default function Aves() {
       {/* Species management + filtering */}
       {commonNamesList.length > 0 && (
         <div className="flex flex-wrap gap-1 items-center">
-          <span className="text-xs text-muted-foreground mr-1">Especies:</span>
+          <span className="text-xs text-muted-foreground mr-1">{t("birds.speciesLabel")}:</span>
           {commonNamesList.map(cn => (
             <SpeciesManager
               key={cn}
@@ -211,7 +213,7 @@ export default function Aves() {
 
       {isLoading ? (
         <div className="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground animate-pulse">
-          Cargando...
+          {t("common.loading")}
         </div>
       ) : (
         <BirdsTable
@@ -229,7 +231,7 @@ export default function Aves() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">
-            Pág. {page + 1} de {totalPages}
+            {t("birds.page")} {page + 1} {t("birds.of")} {totalPages}
           </span>
           <div className="flex gap-1">
             <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(p => p - 1)}>

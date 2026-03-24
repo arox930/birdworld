@@ -2,6 +2,7 @@ import { useState } from "react";
 import { LayoutDashboard, Plus, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { DashboardFiltersBar } from "@/components/dashboard/DashboardFilters";
 import { KPICards } from "@/components/dashboard/KPICards";
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
@@ -19,6 +20,7 @@ export default function Dashboard() {
   const [expenseOpen, setExpenseOpen] = useState(false);
   const navigate = useNavigate();
   const { data, isLoading } = useDashboardData(filters);
+  const { t } = useTranslation();
 
   const stats = data ?? {
     totalBirds: 0, aliveBirds: 0,
@@ -36,18 +38,18 @@ export default function Dashboard() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <LayoutDashboard className="h-6 w-6 text-primary" />
-            Dashboard
+            {t("dashboard.title")}
           </h1>
-          <p className="text-muted-foreground text-sm">Resumen general del criadero</p>
+          <p className="text-muted-foreground text-sm">{t("dashboard.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={() => navigate("/app/gastos")} variant="outline" className="gap-2">
             <Wallet className="h-4 w-4" />
-            Ver gastos
+            {t("dashboard.viewExpenses")}
           </Button>
           <Button onClick={() => setExpenseOpen(true)} variant="outline" className="gap-2">
             <Plus className="h-4 w-4" />
-            Añadir gasto
+            {t("dashboard.addExpense")}
           </Button>
         </div>
       </div>
@@ -56,7 +58,7 @@ export default function Dashboard() {
 
       {isLoading ? (
         <div className="rounded-lg border border-border bg-card p-12 text-center text-muted-foreground animate-pulse">
-          Cargando datos...
+          {t("dashboard.loadingData")}
         </div>
       ) : (
         <>
