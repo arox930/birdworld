@@ -69,7 +69,7 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
     onOpenChange(v);
   };
 
-  // Step 1 → Step 2: Create buyer if needed, then fetch preview
+  // Step 1 → Step 2: Fetch preview (don't create buyer yet)
   const handlePreview = async () => {
     if (!animalId) return;
 
@@ -77,16 +77,29 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
 
     if (tab === "new") {
       if (!nombre || !apellidos || !dni || !domicilio) return;
+      // Store buyer data for later creation, use a temporary placeholder for preview
+      setPendingNewBuyer({ nombre, apellidos, dni, domicilio });
+      // For preview, we need a buyer_id - use an existing one or create temporarily
+      // We'll pass buyer data directly to preview
       try {
-        const newBuyer = await createBuyer.mutateAsync({ nombre, apellidos, dni, domicilio });
-        buyerId = newBuyer.id;
+        const result = await previewCession.mutateAsync({
+          animal_id: animalId,
+          animal_type: animalType,
+          buyer_id: "pending",
+          precio: Number(precio),
+          buyer_override: { nombre, apellidos, dni, domicilio },
+        });
+        setPreviewHtml(result.rendered_html);
+        setStep("preview");
       } catch {
-        return;
+        // error handled by mutation
       }
+      return;
     }
 
     if (!buyerId || !precio) return;
     setResolvedBuyerId(buyerId);
+    setPendingNewBuyer(null);
 
     try {
       const result = await previewCession.mutateAsync({
