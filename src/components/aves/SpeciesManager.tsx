@@ -6,6 +6,7 @@ import { ChevronDown, Plus, Trash2, Check } from "lucide-react";
 import { useBirdSpeciesCatalog, useCreateBirdSpecies, useDeleteBirdSpecies } from "@/hooks/useBirdSpeciesCatalog";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   nombreComun: string;
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function SpeciesManager({ nombreComun, selectedSpeciesId, onSelectSpecies }: Props) {
+  const { t } = useTranslation();
   const { data: species, isLoading } = useBirdSpeciesCatalog(nombreComun);
   const createSpecies = useCreateBirdSpecies();
   const deleteSpecies = useDeleteBirdSpecies();
@@ -55,9 +57,9 @@ export function SpeciesManager({ nombreComun, selectedSpeciesId, onSelectSpecies
       </PopoverTrigger>
       <PopoverContent className="w-72 p-3" align="start">
         <div className="space-y-2">
-          <p className="text-sm font-medium">Especies de {getSpeciesDisplayName(nombreComun)}</p>
+          <p className="text-sm font-medium">{t("birds.speciesOf")} {getSpeciesDisplayName(nombreComun)}</p>
           {isLoading ? (
-            <p className="text-xs text-muted-foreground">Cargando...</p>
+            <p className="text-xs text-muted-foreground">{t("common.loading")}</p>
           ) : species && species.length > 0 ? (
             <ul className="space-y-1">
               {species.map((s) => (
@@ -91,7 +93,7 @@ export function SpeciesManager({ nombreComun, selectedSpeciesId, onSelectSpecies
               ))}
             </ul>
           ) : (
-            <p className="text-xs text-muted-foreground">No hay especies registradas</p>
+            <p className="text-xs text-muted-foreground">{t("birds.noSpeciesRegistered")}</p>
           )}
           <div className="flex gap-1 pt-1">
             <Input

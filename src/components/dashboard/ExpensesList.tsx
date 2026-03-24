@@ -7,8 +7,10 @@ import { Trash2, Receipt, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
 import { ExpenseFormDialog, type Expense } from "./ExpenseFormDialog";
+import { useTranslation } from "react-i18next";
 
 export function ExpensesList() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
@@ -30,7 +32,7 @@ export function ExpensesList() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Gasto eliminado");
+      toast.success(t("expenses.expenseDeleted"));
       queryClient.invalidateQueries({ queryKey: ["expenses-list"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
     },
@@ -41,7 +43,7 @@ export function ExpensesList() {
     return (
       <Card>
         <CardContent className="p-6 text-center text-muted-foreground animate-pulse">
-          Cargando gastos...
+          {t("common.loading")}
         </CardContent>
       </Card>
     );
@@ -52,7 +54,7 @@ export function ExpensesList() {
       <Card>
         <CardContent className="p-6 text-center text-muted-foreground">
           <Receipt className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          No hay gastos registrados
+          {t("expenses.noExpenses")}
         </CardContent>
       </Card>
     );
@@ -62,7 +64,7 @@ export function ExpensesList() {
     <>
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Gastos registrados</CardTitle>
+          <CardTitle className="text-sm font-medium">{t("expenses.registeredExpenses")}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="divide-y divide-border max-h-80 overflow-y-auto">
@@ -77,7 +79,7 @@ export function ExpensesList() {
                       {expense.monto.toFixed(2)} €
                     </span>
                     <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                      Ave
+                      {t("birds.bird")}
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5">

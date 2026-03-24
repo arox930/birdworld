@@ -4,6 +4,7 @@ import {
   PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, Legend,
 } from "recharts";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
+import { useTranslation } from "react-i18next";
 
 const COLORS = [
   "hsl(25, 85%, 45%)",
@@ -35,6 +36,7 @@ export function DashboardCharts({
   monthlyRevenue, monthlyExpenses, monthlySales, monthlyBirths, monthlyDeaths,
   sexDistribution, speciesDistribution, birdRevenue, birdExpenses,
 }: Props) {
+  const { t } = useTranslation();
   const revenueVsExpenses = mergeRevenueExpenses(monthlyRevenue, monthlyExpenses);
 
   return (
@@ -42,7 +44,7 @@ export function DashboardCharts({
       {(monthlyRevenue.length > 0 || monthlyExpenses.length > 0) && (
         <Card className="lg:col-span-2">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Ingresos vs Gastos mensuales</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("dashboard.revenueVsExpenses")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -51,8 +53,8 @@ export function DashboardCharts({
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="month" className="text-xs" tick={{ fill: "hsl(30, 8%, 46%)", fontSize: 11 }} />
                   <YAxis className="text-xs" tick={{ fill: "hsl(30, 8%, 46%)", fontSize: 11 }} tickFormatter={v => `${v}€`} />
-                  <Tooltip contentStyle={{ backgroundColor: "hsl(40, 25%, 97%)", border: "1px solid hsl(35, 15%, 88%)", borderRadius: "8px", fontSize: 12 }} formatter={(v: number, name: string) => [`${v.toFixed(2)} €`, name === "ingresos" ? "Ingresos" : "Gastos"]} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} formatter={(value) => value === "ingresos" ? "Ingresos" : "Gastos"} />
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(40, 25%, 97%)", border: "1px solid hsl(35, 15%, 88%)", borderRadius: "8px", fontSize: 12 }} formatter={(v: number, name: string) => [`${v.toFixed(2)} €`, name === "ingresos" ? t("dashboard.revenue") : t("dashboard.expenses")]} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} formatter={(value) => value === "ingresos" ? t("dashboard.revenue") : t("dashboard.expenses")} />
                   <defs>
                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="hsl(145, 40%, 42%)" stopOpacity={0.3} />
@@ -74,7 +76,7 @@ export function DashboardCharts({
 
       {monthlySales.length > 0 && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Ventas mensuales</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">{t("dashboard.monthlySales")}</CardTitle></CardHeader>
           <CardContent>
             <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">
@@ -83,7 +85,7 @@ export function DashboardCharts({
                   <XAxis dataKey="month" tick={{ fill: "hsl(30, 8%, 46%)", fontSize: 10 }} />
                   <YAxis tick={{ fill: "hsl(30, 8%, 46%)", fontSize: 10 }} allowDecimals={false} />
                   <Tooltip contentStyle={{ backgroundColor: "hsl(40, 25%, 97%)", border: "1px solid hsl(35, 15%, 88%)", borderRadius: "8px", fontSize: 12 }} />
-                  <Bar dataKey="value" fill="hsl(145, 40%, 42%)" radius={[4, 4, 0, 0]} name="Ventas" />
+                  <Bar dataKey="value" fill="hsl(145, 40%, 42%)" radius={[4, 4, 0, 0]} name={t("dashboard.sales")} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -93,7 +95,7 @@ export function DashboardCharts({
 
       {(monthlyBirths.length > 0 || monthlyDeaths.length > 0) && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Nacimientos y muertes</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">{t("dashboard.birthsAndDeaths")}</CardTitle></CardHeader>
           <CardContent>
             <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">
@@ -103,8 +105,8 @@ export function DashboardCharts({
                   <YAxis tick={{ fill: "hsl(30, 8%, 46%)", fontSize: 10 }} allowDecimals={false} />
                   <Tooltip contentStyle={{ backgroundColor: "hsl(40, 25%, 97%)", border: "1px solid hsl(35, 15%, 88%)", borderRadius: "8px", fontSize: 12 }} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="nacimientos" stroke="hsl(145, 40%, 42%)" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="muertes" stroke="hsl(0, 72%, 51%)" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="nacimientos" stroke="hsl(145, 40%, 42%)" strokeWidth={2} dot={{ r: 3 }} name={t("dashboard.births")} />
+                  <Line type="monotone" dataKey="muertes" stroke="hsl(0, 72%, 51%)" strokeWidth={2} dot={{ r: 3 }} name={t("dashboard.deaths")} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -114,7 +116,7 @@ export function DashboardCharts({
 
       {sexDistribution.length > 0 && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Distribución por sexo</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">{t("dashboard.sexDistribution")}</CardTitle></CardHeader>
           <CardContent>
             <div className="h-52 flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
@@ -132,7 +134,7 @@ export function DashboardCharts({
 
       {speciesDistribution.length > 0 && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Distribución por especie</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">{t("dashboard.speciesDistribution")}</CardTitle></CardHeader>
           <CardContent>
             <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">
@@ -141,7 +143,7 @@ export function DashboardCharts({
                   <XAxis type="number" tick={{ fill: "hsl(30, 8%, 46%)", fontSize: 10 }} allowDecimals={false} />
                   <YAxis type="category" dataKey="name" tick={{ fill: "hsl(30, 8%, 46%)", fontSize: 10 }} width={80} />
                   <Tooltip contentStyle={{ backgroundColor: "hsl(40, 25%, 97%)", border: "1px solid hsl(35, 15%, 88%)", borderRadius: "8px", fontSize: 12 }} />
-                  <Bar dataKey="value" fill="hsl(25, 85%, 45%)" radius={[0, 4, 4, 0]} name="Ejemplares" />
+                  <Bar dataKey="value" fill="hsl(25, 85%, 45%)" radius={[0, 4, 4, 0]} name={t("dashboard.specimens")} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

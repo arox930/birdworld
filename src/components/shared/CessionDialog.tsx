@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBuyers, useCreateBuyer, useGenerateCession, useCessionByAnimal, usePreviewCession, type Buyer } from "@/hooks/useCessions";
 import { CessionPreviewEditor } from "./CessionPreviewEditor";
 import { FileText, Download, UserPlus, Users, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface CessionDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface CessionDialogProps {
 type Step = "form" | "preview" | "done";
 
 export function CessionDialog({ open, onOpenChange, animalId, animalType, animalLabel, editMode = false, onComplete }: CessionDialogProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<Step>("form");
   const [tab, setTab] = useState<string>("existing");
   const [selectedBuyerId, setSelectedBuyerId] = useState("");
@@ -69,7 +71,6 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
     onOpenChange(v);
   };
 
-  // Step 1 → Step 2: Fetch preview (don't create buyer yet)
   const handlePreview = async () => {
     if (!animalId) return;
 
@@ -77,10 +78,7 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
 
     if (tab === "new") {
       if (!nombre || !apellidos || !dni || !domicilio) return;
-      // Store buyer data for later creation, use a temporary placeholder for preview
       setPendingNewBuyer({ nombre, apellidos, dni, domicilio });
-      // For preview, we need a buyer_id - use an existing one or create temporarily
-      // We'll pass buyer data directly to preview
       try {
         const result = await previewCession.mutateAsync({
           animal_id: animalId,
@@ -91,9 +89,7 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
         });
         setPreviewHtml(result.rendered_html);
         setStep("preview");
-      } catch {
-        // error handled by mutation
-      }
+      } catch {}
       return;
     }
 
@@ -110,18 +106,14 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
       });
       setPreviewHtml(result.rendered_html);
       setStep("preview");
-    } catch {
-      // error handled by mutation
-    }
+    } catch {}
   };
 
-  // Step 2 → Step 3: Create buyer if needed, then generate PDF
   const handleGeneratePdf = async (finalHtml: string) => {
     if (!animalId) return;
 
     let buyerId = resolvedBuyerId;
 
-    // Create buyer now if it was a new buyer
     if (pendingNewBuyer) {
       try {
         const newBuyer = await createBuyer.mutateAsync(pendingNewBuyer);
@@ -146,9 +138,7 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
       setPdfUrl(result.pdf_url);
       setStep("done");
       onComplete?.();
-    } catch {
-      // error handled by mutation
-    }
+    } catch {}
   };
 
   const getBuyerName = () => {
@@ -184,7 +174,7 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
     ? !!selectedBuyerId && !!precio && Number(precio) > 0
     : !!nombre && !!apellidos && !!dni && !!domicilio && !!precio && Number(precio) > 0;
 
-  const title = editMode ? "Modificar Cesión" : "Documento de Cesión";
+  const title = editMode ? t("cession.modifyTitle") : t("cession.title");
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -200,15 +190,15 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
           <div className="space-y-4 py-4 text-center">
             <div className="rounded-lg border border-border bg-muted/50 p-6">
               <FileText className="h-12 w-12 mx-auto text-primary mb-3" />
-              <p className="font-medium">PDF generado correctamente</p>
+              <p className="font-medium">{t("cession.pdfGenerated")}</p>
               <p className="text-sm text-muted-foreground mt-1">{animalLabel}</p>
             </div>
             <Button className="w-full" onClick={handleDownload} disabled={downloading}>
               {downloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-              Descargar PDF
+              {t("cession.downloadPdf")}
             </Button>
             <Button variant="outline" className="w-full" onClick={() => handleClose(false)}>
-              Cerrar
+              {t("common.close")}
             </Button>
           </div>
         ) : step === "preview" ? (
@@ -221,25 +211,25 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
         ) : (
           <div className="space-y-4">
             <div className="rounded-lg border border-border bg-muted/50 p-3">
-              <p className="text-sm font-medium">Ejemplar: <span className="text-primary">{animalLabel}</span></p>
+              <p className="text-sm font-medium">{t("cession.specimen")}: <span className="text-primary">{animalLabel}</span></p>
             </div>
 
             <Tabs value={tab} onValueChange={setTab}>
               <TabsList className="w-full">
                 <TabsTrigger value="existing" className="flex-1 gap-1">
-                  <Users className="h-3.5 w-3.5" /> Recurrentes
+                  <Users className="h-3.5 w-3.5" /> {t("cession.recurringBuyers")}
                 </TabsTrigger>
                 <TabsTrigger value="new" className="flex-1 gap-1">
-                  <UserPlus className="h-3.5 w-3.5" /> Nuevo
+                  <UserPlus className="h-3.5 w-3.5" /> {t("cession.newBuyer")}
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="existing" className="space-y-3 mt-3">
                 <div>
-                  <Label>Comprador recurrente</Label>
+                  <Label>{t("cession.recurringBuyer")}</Label>
                   <Select value={selectedBuyerId} onValueChange={setSelectedBuyerId}>
                     <SelectTrigger>
-                      <SelectValue placeholder={loadingBuyers ? "Cargando..." : "Seleccionar comprador"} />
+                      <SelectValue placeholder={loadingBuyers ? t("common.loading") : t("cession.selectBuyer")} />
                     </SelectTrigger>
                     <SelectContent>
                       {buyers.filter((b: any) => b.recurrente).map((b: Buyer) => (
@@ -250,7 +240,7 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
                     </SelectContent>
                   </Select>
                   {buyers.filter((b: any) => b.recurrente).length === 0 && !loadingBuyers && (
-                    <p className="text-xs text-muted-foreground mt-1">No hay compradores recurrentes. Márcalos en la sección Compradores.</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t("cession.noRecurringBuyers")}</p>
                   )}
                 </div>
               </TabsContent>
@@ -258,27 +248,27 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
               <TabsContent value="new" className="space-y-3 mt-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label>Nombre</Label>
+                    <Label>{t("buyers.name")}</Label>
                     <Input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Juan" />
                   </div>
                   <div>
-                    <Label>Apellidos</Label>
+                    <Label>{t("buyers.surname")}</Label>
                     <Input value={apellidos} onChange={(e) => setApellidos(e.target.value)} placeholder="García López" />
                   </div>
                 </div>
                 <div>
-                  <Label>DNI</Label>
+                  <Label>{t("buyers.dni")}</Label>
                   <Input value={dni} onChange={(e) => setDni(e.target.value)} placeholder="12345678A" />
                 </div>
                 <div>
-                  <Label>Domicilio</Label>
+                  <Label>{t("buyers.address")}</Label>
                   <Input value={domicilio} onChange={(e) => setDomicilio(e.target.value)} placeholder="C/ Ejemplo 1, Madrid" />
                 </div>
               </TabsContent>
             </Tabs>
 
             <div>
-              <Label>Precio (EUR)</Label>
+              <Label>{t("cession.price")}</Label>
               <Input
                 type="number"
                 min="0"
@@ -291,11 +281,11 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
 
             <DialogFooter>
               <Button variant="outline" onClick={() => handleClose(false)} disabled={isSubmitting}>
-                Cancelar
+                {t("common.cancel")}
               </Button>
               <Button onClick={handlePreview} disabled={!canSubmit || isSubmitting}>
                 {isSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
-                {isSubmitting ? "Cargando..." : "Previsualizar documento"}
+                {isSubmitting ? t("common.loading") : t("cession.previewDocument")}
               </Button>
             </DialogFooter>
           </div>

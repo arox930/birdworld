@@ -9,6 +9,7 @@ import { getSpeciesDisplayName } from "@/lib/speciesNames";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useBirdCommonNames } from "@/hooks/useBirdCommonNames";
+import { useTranslation } from "react-i18next";
 
 export type Expense = {
   id: string;
@@ -27,6 +28,7 @@ type Props = {
 };
 
 export function ExpenseFormDialog({ open, onOpenChange, expense }: Props) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { data: commonNames = [] } = useBirdCommonNames();
   const [monto, setMonto] = useState("");
@@ -87,14 +89,14 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: Props) {
       }
     },
     onSuccess: () => {
-      toast.success(isEditing ? "Gasto actualizado" : "Gasto registrado correctamente");
+      toast.success(isEditing ? t("expenses.expenseUpdated") : t("expenses.expenseRegistered"));
       queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
       queryClient.invalidateQueries({ queryKey: ["expenses-list"] });
       resetForm();
       onOpenChange(false);
     },
     onError: (err: Error) => {
-      toast.error("Error al guardar: " + err.message);
+      toast.error(t("expenses.saveError") + err.message);
     },
   });
 
@@ -104,22 +106,22 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Editar gasto" : "Registrar gasto"}</DialogTitle>
+          <DialogTitle>{isEditing ? t("expenses.editExpense") : t("expenses.registerExpense")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="monto">Monto (€)</Label>
+            <Label htmlFor="monto">{t("expenses.amount")}</Label>
             <Input id="monto" type="number" step="0.01" min="0" placeholder="0.00" value={monto} onChange={(e) => setMonto(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="fecha">Fecha</Label>
+            <Label htmlFor="fecha">{t("expenses.date")}</Label>
             <Input id="fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label>Nombre común</Label>
+            <Label>{t("expenses.commonName")}</Label>
             <Select value={categoria} onValueChange={(v) => { setCategoria(v); setSubcategoria(""); }}>
-              <SelectTrigger><SelectValue placeholder="Selecciona nombre común" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("expenses.selectCommonName")} /></SelectTrigger>
               <SelectContent>
                 {commonNames.map((cn) => (<SelectItem key={cn.id} value={cn.nombre}>{getSpeciesDisplayName(cn.nombre)}</SelectItem>))}
               </SelectContent>
@@ -127,26 +129,26 @@ export function ExpenseFormDialog({ open, onOpenChange, expense }: Props) {
           </div>
           {categoria && birdSubspecies.length > 0 && (
             <div className="space-y-2">
-              <Label>Especie (opcional)</Label>
+              <Label>{t("expenses.speciesOptional")}</Label>
               <Select value={subcategoria || "__none__"} onValueChange={(v) => setSubcategoria(v === "__none__" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="Todas las especies" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("expenses.allSpecies")} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">Todas las especies</SelectItem>
+                  <SelectItem value="__none__">{t("expenses.allSpecies")}</SelectItem>
                   {birdSubspecies.map((sp) => (<SelectItem key={sp.id} value={sp.nombre_especie}>{sp.nombre_especie}</SelectItem>))}
                 </SelectContent>
               </Select>
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="descripcion">Descripción (opcional)</Label>
-            <Input id="descripcion" placeholder="Ej: Comida, veterinario..." value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+            <Label htmlFor="descripcion">{t("expenses.description")}</Label>
+            <Input id="descripcion" placeholder={t("expenses.descriptionPlaceholder")} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <Button onClick={() => mutation.mutate()} disabled={!isValid || mutation.isPending}>
-            {mutation.isPending ? "Guardando..." : isEditing ? "Actualizar" : "Guardar"}
+            {mutation.isPending ? t("common.saving") : isEditing ? t("common.update") : t("common.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

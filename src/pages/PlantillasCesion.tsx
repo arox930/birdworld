@@ -7,8 +7,10 @@ import { useBirdSpeciesCatalog } from "@/hooks/useBirdSpeciesCatalog";
 import { useBirdCommonNames } from "@/hooks/useBirdCommonNames";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
 import { TemplateEditorDialog } from "@/components/plantillas/TemplateEditorDialog";
+import { useTranslation } from "react-i18next";
 
 export default function PlantillasCesion() {
+  const { t } = useTranslation();
   const { data: templates = [] } = useCessionTemplates();
   const { data: speciesCatalog = [] } = useBirdSpeciesCatalog();
   const { data: commonNames = [] } = useBirdCommonNames();
@@ -50,18 +52,18 @@ export default function PlantillasCesion() {
     <div className="p-6 max-w-3xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
         <FileText className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold text-foreground">Plantillas de Cesión</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("templates.title")}</h1>
       </div>
       <p className="text-sm text-muted-foreground">
-        Crea plantillas de documento de cesión por especie. 
-        Usa variables como <code className="bg-muted px-1 rounded text-xs">{"{{nombre_comprador}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{dni_comprador}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{precio}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{fecha}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{identificador_animal}}"}</code> para autocompletar.
+        {t("templates.description")}{" "}
+        {t("templates.useVariables")} <code className="bg-muted px-1 rounded text-xs">{"{{nombre_comprador}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{dni_comprador}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{precio}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{fecha}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{identificador_animal}}"}</code> {t("templates.toAutofill")}
       </p>
 
       <Collapsible defaultOpen>
         <CollapsibleTrigger className="flex items-center gap-2 w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors group">
           <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
           <Bird className="h-5 w-5 text-primary" />
-          <span className="font-semibold text-foreground">Aves</span>
+          <span className="font-semibold text-foreground">{t("templates.birdsSection")}</span>
         </CollapsibleTrigger>
         <CollapsibleContent className="pl-4 mt-2 space-y-1">
           {commonNames.map((cn) => (
@@ -69,11 +71,11 @@ export default function PlantillasCesion() {
               <CollapsibleTrigger className="flex items-center gap-2 w-full p-2 rounded-md hover:bg-muted/50 transition-colors group text-sm">
                 <ChevronRight className="h-3.5 w-3.5 transition-transform group-data-[state=open]:rotate-90" />
                 <span className="font-medium text-foreground">{getSpeciesDisplayName(cn.nombre)}</span>
-                <span className="text-muted-foreground text-xs">({birdGroups[cn.nombre]?.length || 0} especies)</span>
+                <span className="text-muted-foreground text-xs">({birdGroups[cn.nombre]?.length || 0} {t("templates.speciesCount")})</span>
               </CollapsibleTrigger>
               <CollapsibleContent className="pl-6 mt-1 space-y-1">
                 {(birdGroups[cn.nombre] || []).length === 0 ? (
-                  <p className="text-xs text-muted-foreground py-1">Sin especies registradas</p>
+                  <p className="text-xs text-muted-foreground py-1">{t("templates.noSpeciesRegistered")}</p>
                 ) : (
                   birdGroups[cn.nombre].map((especie) => {
                     const key = `${cn.nombre}::${especie}`;
@@ -88,7 +90,7 @@ export default function PlantillasCesion() {
                           onClick={() => openEditor("bird", key)}
                         >
                           {has ? <Pencil className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
-                          {has ? "Editar" : "Añadir"}
+                          {has ? t("common.edit") : t("common.add")}
                         </Button>
                       </div>
                     );
