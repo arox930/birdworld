@@ -55,7 +55,7 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
     setPrecio("");
     setPdfUrl(null);
     setPreviewHtml("");
-    setResolvedBuyerId("");
+    setPendingNewBuyer(null);
     setNombre("");
     setApellidos("");
     setDni("");
