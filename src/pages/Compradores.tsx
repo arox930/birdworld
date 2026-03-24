@@ -3,6 +3,7 @@ import { useBuyers, useCreateBuyer, type Buyer } from "@/hooks/useCessions";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +72,7 @@ function useBuyerAnimals() {
 }
 
 export default function Compradores() {
+  const { t } = useTranslation();
   const { data: buyers = [], isLoading } = useBuyers();
   const { data: buyerAnimals = {} } = useBuyerAnimals();
   const createBuyer = useCreateBuyer();
@@ -95,9 +97,9 @@ export default function Compradores() {
         .eq("id", b.id);
       if (error) throw error;
       qc.invalidateQueries({ queryKey: ["buyers"] });
-      toast.success(b.recurrente ? "Comprador desmarcado como recurrente" : "Comprador marcado como recurrente");
+      toast.success(b.recurrente ? t("buyers.unmarkedRecurring") : t("buyers.markedRecurring"));
     } catch {
-      toast.error("Error al actualizar");
+      toast.error(t("buyers.updateError"));
     }
   };
 
@@ -139,15 +141,15 @@ export default function Compradores() {
           .update({ nombre, apellidos, dni, domicilio })
           .eq("id", editingBuyer.id);
         if (error) throw error;
-        toast.success("Comprador actualizado");
+        toast.success(t("buyers.buyerUpdated"));
       } else {
         await createBuyer.mutateAsync({ nombre, apellidos, dni, domicilio });
-        toast.success("Comprador creado");
+        toast.success(t("buyers.buyerCreated"));
       }
       qc.invalidateQueries({ queryKey: ["buyers"] });
       setDialogOpen(false);
     } catch {
-      toast.error("Error al guardar comprador");
+      toast.error(t("buyers.saveError"));
     } finally {
       setSaving(false);
     }
@@ -158,10 +160,10 @@ export default function Compradores() {
     try {
       const { error } = await supabase.from("buyers").delete().eq("id", deleteId);
       if (error) throw error;
-      toast.success("Comprador eliminado");
+      toast.success(t("buyers.buyerDeleted"));
       qc.invalidateQueries({ queryKey: ["buyers"] });
     } catch {
-      toast.error("No se pudo eliminar. Puede tener cesiones asociadas.");
+      toast.error(t("buyers.buyerDeleteError"));
     }
     setDeleteId(null);
   };
@@ -174,22 +176,22 @@ export default function Compradores() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <Users className="h-6 w-6 text-primary" />
-            Compradores
+            {t("buyers.title")}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {buyers.length} comprador{buyers.length !== 1 ? "es" : ""} registrado{buyers.length !== 1 ? "s" : ""}
+            {buyers.length} {buyers.length !== 1 ? t("buyers.buyersPlural") : t("buyers.buyer")} {buyers.length !== 1 ? t("buyers.registeredPlural") : t("buyers.registered")}
           </p>
         </div>
         <Button onClick={openNew} className="gap-2">
           <UserPlus className="h-4 w-4" />
-          Nuevo comprador
+          {t("buyers.newBuyer")}
         </Button>
       </div>
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar por nombre, DNI..."
+          placeholder={t("buyers.searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9"
@@ -201,23 +203,23 @@ export default function Compradores() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-10"></TableHead>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Apellidos</TableHead>
-              <TableHead>DNI</TableHead>
-              <TableHead className="hidden md:table-cell">Domicilio</TableHead>
-              <TableHead className="text-center">Ejemplares</TableHead>
-              <TableHead className="w-28">Acciones</TableHead>
+              <TableHead>{t("buyers.name")}</TableHead>
+              <TableHead>{t("buyers.surname")}</TableHead>
+              <TableHead>{t("buyers.dni")}</TableHead>
+              <TableHead className="hidden md:table-cell">{t("buyers.address")}</TableHead>
+              <TableHead className="text-center">{t("buyers.specimensCol")}</TableHead>
+              <TableHead className="w-28">{t("common.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Cargando...</TableCell>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{t("common.loading")}</TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  {search ? "Sin resultados" : "No hay compradores registrados"}
+                  {search ? t("common.noResults") : t("buyers.noBuyers")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -236,7 +238,7 @@ export default function Compradores() {
                       </TableCell>
                       <TableCell className="font-medium">
                         {b.nombre}
-                        {b.recurrente && <Badge variant="secondary" className="ml-2 text-[10px]">Recurrente</Badge>}
+                        {b.recurrente && <Badge variant="secondary" className="ml-2 text-[10px]">{t("buyers.recurring")}</Badge>}
                       </TableCell>
                       <TableCell>{b.apellidos}</TableCell>
                       <TableCell className="font-mono text-sm">{b.dni}</TableCell>
@@ -254,7 +256,7 @@ export default function Compradores() {
                             variant={b.recurrente ? "default" : "outline"}
                             size="icon"
                             className="h-8 w-8 text-xs font-bold"
-                            title={b.recurrente ? "Quitar recurrente" : "Marcar como recurrente"}
+                            title={b.recurrente ? t("buyers.unmarkRecurring") : t("buyers.markRecurring")}
                             onClick={() => toggleRecurrente(b)}
                           >
                             R
@@ -272,7 +274,7 @@ export default function Compradores() {
                       <TableRow key={`${b.id}-animals`}>
                         <TableCell colSpan={7} className="bg-muted/30 p-0">
                           <div className="px-6 py-3 space-y-2">
-                            <p className="text-xs font-medium text-muted-foreground mb-2">Ejemplares adquiridos:</p>
+                            <p className="text-xs font-medium text-muted-foreground mb-2">{t("buyers.acquiredSpecimens")}</p>
                             <div className="grid gap-3 sm:grid-cols-2">
                               {animals.map((a) => (
                                 <div key={a.id} className="rounded-md border border-border bg-card p-3 text-sm space-y-2">
@@ -282,17 +284,17 @@ export default function Compradores() {
                                     <Badge variant="outline" className="ml-auto text-[10px]">{a.precio.toFixed(2)} €</Badge>
                                   </div>
                                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                                    {a.especie_nombre && <div><span className="text-muted-foreground">Especie:</span> <span className="italic">{a.especie_nombre}</span></div>}
-                                    <div><span className="text-muted-foreground">Sexo:</span> {a.sexo || "—"}</div>
-                                    {a.anilla && <div><span className="text-muted-foreground">Anilla:</span> {a.anilla}</div>}
-                                    {a.microchip && <div><span className="text-muted-foreground">Microchip:</span> {a.microchip}</div>}
+                                    {a.especie_nombre && <div><span className="text-muted-foreground">{t("birds.speciesLabel")}:</span> <span className="italic">{a.especie_nombre}</span></div>}
+                                    <div><span className="text-muted-foreground">{t("birds.sex")}:</span> {a.sexo || "—"}</div>
+                                    {a.anilla && <div><span className="text-muted-foreground">{t("birds.ring")}:</span> {a.anilla}</div>}
+                                    {a.microchip && <div><span className="text-muted-foreground">{t("birds.microchip")}:</span> {a.microchip}</div>}
                                     {a.numero_cites && <div><span className="text-muted-foreground">CITES:</span> {a.numero_cites}</div>}
                                     {a.id_miteco && <div><span className="text-muted-foreground">MITECO:</span> {a.id_miteco}</div>}
-                                    <div><span className="text-muted-foreground">Cesión:</span> {format(new Date(a.fecha_cesion + "T00:00:00"), "dd-MM-yyyy")}</div>
+                                    <div><span className="text-muted-foreground">{t("buyers.cession")}:</span> {format(new Date(a.fecha_cesion + "T00:00:00"), "dd-MM-yyyy")}</div>
                                   </div>
                                   {a.comentarios && (
                                     <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">
-                                      <span className="font-medium">Comentarios:</span> {a.comentarios}
+                                      <span className="font-medium">{t("birds.comments")}:</span> {a.comentarios}
                                     </p>
                                   )}
                                 </div>
@@ -314,32 +316,32 @@ export default function Compradores() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingBuyer ? "Editar comprador" : "Nuevo comprador"}</DialogTitle>
+            <DialogTitle>{editingBuyer ? t("buyers.editBuyer") : t("buyers.newBuyer")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Nombre</Label>
+                <Label>{t("buyers.name")}</Label>
                 <Input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Juan" />
               </div>
               <div>
-                <Label>Apellidos</Label>
+                <Label>{t("buyers.surname")}</Label>
                 <Input value={apellidos} onChange={(e) => setApellidos(e.target.value)} placeholder="García López" />
               </div>
             </div>
             <div>
-              <Label>DNI</Label>
+              <Label>{t("buyers.dni")}</Label>
               <Input value={dni} onChange={(e) => setDni(e.target.value)} placeholder="12345678A" />
             </div>
             <div>
-              <Label>Domicilio</Label>
+              <Label>{t("buyers.address")}</Label>
               <Input value={domicilio} onChange={(e) => setDomicilio(e.target.value)} placeholder="C/ Ejemplo 1, Madrid" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>{t("common.cancel")}</Button>
             <Button onClick={handleSave} disabled={!canSave || saving}>
-              {saving ? "Guardando..." : editingBuyer ? "Actualizar" : "Crear"}
+              {saving ? t("common.saving") : editingBuyer ? t("common.update") : t("common.create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -349,12 +351,12 @@ export default function Compradores() {
       <Dialog open={!!deleteId} onOpenChange={(v) => !v && setDeleteId(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>¿Eliminar comprador?</DialogTitle>
+            <DialogTitle>{t("buyers.deleteBuyerTitle")}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">Esta acción no se puede deshacer. Si tiene cesiones asociadas, no se podrá eliminar.</p>
+          <p className="text-sm text-muted-foreground">{t("buyers.deleteBuyerDesc")}</p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteId(null)}>Cancelar</Button>
-            <Button variant="destructive" onClick={handleDelete}>Eliminar</Button>
+            <Button variant="outline" onClick={() => setDeleteId(null)}>{t("common.cancel")}</Button>
+            <Button variant="destructive" onClick={handleDelete}>{t("common.delete")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

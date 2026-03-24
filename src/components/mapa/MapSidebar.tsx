@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Bird, Plus, MapPin, FolderPlus, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useTranslation } from "react-i18next";
 import type { MapZone } from "@/hooks/useMapZones";
 import type { MapFolder } from "@/hooks/useMapFolders";
 
@@ -24,16 +25,11 @@ interface Props {
 }
 
 export function MapSidebar({
-  zones,
-  folders,
-  unmappedZones,
-  unassigned,
-  onAddUnmappedZone,
-  onAnimalDragStart,
-  onNewZoneOpen,
-  onNewFolderOpen,
+  zones, folders, unmappedZones, unassigned,
+  onAddUnmappedZone, onAnimalDragStart, onNewZoneOpen, onNewFolderOpen,
 }: Props) {
   const [open, setOpen] = useState(true);
+  const { t } = useTranslation();
 
   if (!open) {
     return (
@@ -49,14 +45,14 @@ export function MapSidebar({
     <div className="w-72 border-r border-border bg-card flex flex-col shrink-0">
       <div className="p-4 border-b border-border flex items-center justify-between">
         <h2 className="font-semibold text-foreground flex items-center gap-2">
-          <MapPin className="h-4 w-4" /> Panel de zonas
+          <MapPin className="h-4 w-4" /> {t("map.zonesPanel")}
         </h2>
         <div className="flex gap-1">
           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onNewFolderOpen}>
-            <FolderPlus className="h-3 w-3 mr-1" /> Carpeta
+            <FolderPlus className="h-3 w-3 mr-1" /> {t("map.folder")}
           </Button>
           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onNewZoneOpen}>
-            <Plus className="h-3 w-3 mr-1" /> Zona
+            <Plus className="h-3 w-3 mr-1" /> {t("map.zone")}
           </Button>
           <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setOpen(false)}>
             <PanelLeftClose className="h-3.5 w-3.5" />
@@ -67,7 +63,7 @@ export function MapSidebar({
       <ScrollArea className="flex-1">
         {unmappedZones.length > 0 && (
           <div className="p-4 border-b border-border">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">Zonas sin dibujar</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">{t("map.unmappedZones")}</h3>
             <div className="space-y-1">
               {unmappedZones.map((z) => (
                 <div key={z} className="flex items-center justify-between text-sm">
@@ -83,7 +79,7 @@ export function MapSidebar({
 
         <div className="p-4">
           <h3 className="text-sm font-medium text-muted-foreground mb-2">
-            Sin zona asignada ({unassigned.length})
+            {t("map.unassigned")} ({unassigned.length})
           </h3>
           <div className="space-y-1">
             {unassigned.map((a) => (
@@ -98,7 +94,7 @@ export function MapSidebar({
               </div>
             ))}
             {unassigned.length === 0 && (
-              <p className="text-xs text-muted-foreground">Todos los ejemplares tienen zona</p>
+              <p className="text-xs text-muted-foreground">{t("map.allAssigned")}</p>
             )}
           </div>
         </div>

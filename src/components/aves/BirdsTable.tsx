@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import type { Bird } from "@/hooks/useBirds";
 import { Badge } from "@/components/ui/badge";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   birds: Bird[];
@@ -18,17 +19,19 @@ type Props = {
   onAttachments: (bird: Bird) => void;
 };
 
-function getEstado(bird: Bird) {
-  if (bird.fecha_muerte) return <Badge variant="destructive">Muerto</Badge>;
-  if (bird.fecha_cesion) return <Badge variant="secondary">Cedido</Badge>;
-  return <Badge className="bg-accent text-accent-foreground">Vivo</Badge>;
-}
-
 export function BirdsTable({ birds, onView, onEdit, onDelete, onCession, onEditCession, onDownloadCession, onAttachments }: Props) {
+  const { t } = useTranslation();
+
+  function getEstado(bird: Bird) {
+    if (bird.fecha_muerte) return <Badge variant="destructive">{t("birds.dead")}</Badge>;
+    if (bird.fecha_cesion) return <Badge variant="secondary">{t("birds.ceded")}</Badge>;
+    return <Badge className="bg-accent text-accent-foreground">{t("birds.alive")}</Badge>;
+  }
+
   if (birds.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
-        No se encontraron ejemplares
+        {t("birds.noSpecimensFound")}
       </div>
     );
   }
@@ -38,13 +41,13 @@ export function BirdsTable({ birds, onView, onEdit, onDelete, onCession, onEditC
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Nombre común</TableHead>
-            <TableHead>Especie</TableHead>
-            <TableHead>Sexo</TableHead>
-            <TableHead className="hidden sm:table-cell">Anilla</TableHead>
-            <TableHead className="hidden md:table-cell">Microchip</TableHead>
-            <TableHead className="hidden lg:table-cell">Nacimiento</TableHead>
-            <TableHead>Estado</TableHead>
+            <TableHead>{t("birds.commonName")}</TableHead>
+            <TableHead>{t("birds.speciesLabel")}</TableHead>
+            <TableHead>{t("birds.sex")}</TableHead>
+            <TableHead className="hidden sm:table-cell">{t("birds.ring")}</TableHead>
+            <TableHead className="hidden md:table-cell">{t("birds.microchip")}</TableHead>
+            <TableHead className="hidden lg:table-cell">{t("birds.birthDate")}</TableHead>
+            <TableHead>{t("birds.status")}</TableHead>
             <TableHead className="w-12"></TableHead>
           </TableRow>
         </TableHeader>
@@ -71,30 +74,30 @@ export function BirdsTable({ birds, onView, onEdit, onDelete, onCession, onEditC
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => onView(bird)}>
-                        <Eye className="mr-2 h-4 w-4" /> Ver
+                        <Eye className="mr-2 h-4 w-4" /> {t("common.view")}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onEdit(bird)}>
-                        <Pencil className="mr-2 h-4 w-4" /> Modificar
+                        <Pencil className="mr-2 h-4 w-4" /> {t("birds.modify")}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onAttachments(bird)}>
-                        <Paperclip className="mr-2 h-4 w-4" /> Adjuntos
+                        <Paperclip className="mr-2 h-4 w-4" /> {t("birds.attachments")}
                       </DropdownMenuItem>
                       {bird.fecha_muerte ? null : bird.fecha_cesion ? (
                         <>
                           <DropdownMenuItem onClick={() => onEditCession(bird)}>
-                            <FileEdit className="mr-2 h-4 w-4" /> Modificar Cesión
+                            <FileEdit className="mr-2 h-4 w-4" /> {t("birds.modifyCession")}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onDownloadCession(bird)}>
-                            <Download className="mr-2 h-4 w-4" /> Descargar Cesión
+                            <Download className="mr-2 h-4 w-4" /> {t("birds.downloadCession")}
                           </DropdownMenuItem>
                         </>
                       ) : (
                         <DropdownMenuItem onClick={() => onCession(bird)}>
-                          <FileText className="mr-2 h-4 w-4" /> Documento de Cesión
+                          <FileText className="mr-2 h-4 w-4" /> {t("birds.cessionDocument")}
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem onClick={() => onDelete(bird)} className="text-destructive focus:text-destructive">
-                        <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                        <Trash2 className="mr-2 h-4 w-4" /> {t("common.delete")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

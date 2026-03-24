@@ -14,6 +14,7 @@ import { useBirdSpeciesCatalog } from "@/hooks/useBirdSpeciesCatalog";
 import { ZonaCombobox } from "@/components/shared/ZonaCombobox";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
 import { BirdParejaSearch } from "./BirdParejaSearch";
+import { useTranslation } from "react-i18next";
 
 const SEXES = Constants.public.Enums.animal_sex;
 
@@ -28,11 +29,13 @@ type Props = {
 };
 
 export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, prefillData, commonNames = [] }: Props) {
+  const { t } = useTranslation();
+
   const birdSchema = z.object({
-    especie: z.string().min(1, "Selecciona un nombre común"),
-    especie_id: z.string().min(1, "Selecciona una especie"),
+    especie: z.string().min(1, t("birds.selectCommonName")),
+    especie_id: z.string().min(1, t("birds.selectSpecies")),
     sexo: z.enum(SEXES as unknown as [string, ...string[]]),
-    fecha_nacimiento: z.string().min(1, "Requerido"),
+    fecha_nacimiento: z.string().min(1),
     id_miteco: z.string().max(100).optional().or(z.literal("")),
     microchip: z.string().max(100).optional().or(z.literal("")),
     anilla: z.string().max(100).optional().or(z.literal("")),
@@ -144,16 +147,16 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{bird ? "Editar ejemplar" : "Añadir ejemplar"}</DialogTitle>
+          <DialogTitle>{bird ? t("birds.editSpecimen") : t("birds.addSpecimen")}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={form.control} name="especie" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nombre común *</FormLabel>
+                  <FormLabel>{t("birds.commonName")} *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Selecciona nombre común" /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger><SelectValue placeholder={t("birds.selectCommonName")} /></SelectTrigger></FormControl>
                     <SelectContent>
                       {commonNames.map(s => <SelectItem key={s} value={s}>{getSpeciesDisplayName(s)}</SelectItem>)}
                     </SelectContent>
@@ -163,15 +166,15 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
               )} />
               <FormField control={form.control} name="especie_id" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Especie *</FormLabel>
+                  <FormLabel>{t("birds.speciesLabel")} *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Selecciona especie" /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger><SelectValue placeholder={t("birds.selectSpecies")} /></SelectTrigger></FormControl>
                     <SelectContent>
                       {speciesList && speciesList.length > 0 ? (
                         speciesList.map(s => <SelectItem key={s.id} value={s.id}>{s.nombre_especie}</SelectItem>)
                       ) : (
                         <div className="px-2 py-3 text-sm text-muted-foreground text-center">
-                          No hay especies para este nombre común. Añádelas desde los filtros.
+                          {t("birds.noSpeciesForName")}
                         </div>
                       )}
                     </SelectContent>
@@ -181,7 +184,7 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
               )} />
               <FormField control={form.control} name="sexo" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Sexo *</FormLabel>
+                  <FormLabel>{t("birds.sex")} *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
@@ -193,71 +196,71 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
               )} />
               <FormField control={form.control} name="fecha_nacimiento" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Fecha Nacimiento *</FormLabel>
+                  <FormLabel>{t("birds.birthDate")} *</FormLabel>
                   <FormControl><Input type="date" min="2000-01-01" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="fecha_muerte" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Fecha Muerte</FormLabel>
+                  <FormLabel>{t("birds.deathDate")}</FormLabel>
                   <FormControl><Input type="date" min="2000-01-01" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="id_miteco" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ID MITECO</FormLabel>
-                  <FormControl><Input placeholder="Opcional" {...field} /></FormControl>
+                  <FormLabel>{t("birds.mitecoId")}</FormLabel>
+                  <FormControl><Input placeholder={t("common.optional")} {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="microchip" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Microchip</FormLabel>
-                  <FormControl><Input placeholder="Opcional" {...field} /></FormControl>
+                  <FormLabel>{t("birds.microchip")}</FormLabel>
+                  <FormControl><Input placeholder={t("common.optional")} {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="anilla" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Anilla</FormLabel>
-                  <FormControl><Input placeholder="Opcional" {...field} /></FormControl>
+                  <FormLabel>{t("birds.ring")}</FormLabel>
+                  <FormControl><Input placeholder={t("common.optional")} {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="numero_cites" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nº CITES</FormLabel>
-                  <FormControl><Input placeholder="Opcional" {...field} /></FormControl>
+                  <FormLabel>{t("birds.citesNumber")}</FormLabel>
+                  <FormControl><Input placeholder={t("common.optional")} {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="zona" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Zona</FormLabel>
+                  <FormLabel>{t("birds.zone")}</FormLabel>
                   <ZonaCombobox value={field.value ?? ""} onChange={field.onChange} />
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="padre_externo" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Padre (externo)</FormLabel>
-                  <FormControl><Input placeholder="Texto libre si es externo" {...field} /></FormControl>
+                  <FormLabel>{t("birds.externalFather")}</FormLabel>
+                  <FormControl><Input placeholder={t("birds.freeTextExternal")} {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="madre_externa" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Madre (externa)</FormLabel>
-                  <FormControl><Input placeholder="Texto libre si es externa" {...field} /></FormControl>
+                  <FormLabel>{t("birds.externalMother")}</FormLabel>
+                  <FormControl><Input placeholder={t("birds.freeTextExternalFem")} {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
             </div>
             <FormField control={form.control} name="pareja_id" render={({ field }) => (
               <FormItem>
-                <FormLabel>Pareja</FormLabel>
+                <FormLabel>{t("birds.partner")}</FormLabel>
                 <FormControl>
                   <BirdParejaSearch
                     nombreComun={selectedCommonName}
@@ -271,14 +274,14 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
             )} />
             <FormField control={form.control} name="comentarios" render={({ field }) => (
               <FormItem>
-                <FormLabel>Comentarios</FormLabel>
-                <FormControl><Textarea placeholder="Observaciones..." rows={3} {...field} /></FormControl>
+                <FormLabel>{t("birds.comments")}</FormLabel>
+                <FormControl><Textarea placeholder={t("birds.observations")} rows={3} {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-              <Button type="submit" disabled={isLoading}>{bird ? "Guardar cambios" : "Añadir ejemplar"}</Button>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
+              <Button type="submit" disabled={isLoading}>{bird ? t("birds.saveChanges") : t("birds.addSpecimen")}</Button>
             </div>
           </form>
         </Form>

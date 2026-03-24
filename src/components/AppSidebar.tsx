@@ -2,6 +2,7 @@ import { LayoutDashboard, Map, Users, FileText, Bird } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import logoImg from "@/assets/logo.png";
 import { useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Sidebar,
   SidebarContent,
@@ -16,17 +17,18 @@ import {
 } from "@/components/ui/sidebar";
 
 const navItems = [
-  { title: "Dashboard", url: "/app/dashboard", icon: LayoutDashboard },
-  { title: "Aves", url: "/app/aves", icon: Bird },
-  { title: "Compradores", url: "/app/compradores", icon: Users },
-  { title: "Mapa", url: "/app/mapa", icon: Map },
-  { title: "Plantillas de Cesión", url: "/app/plantillas-cesion", icon: FileText },
+  { titleKey: "nav.dashboard", url: "/app/dashboard", icon: LayoutDashboard },
+  { titleKey: "nav.birds", url: "/app/aves", icon: Bird },
+  { titleKey: "nav.buyers", url: "/app/compradores", icon: Users },
+  { titleKey: "nav.map", url: "/app/mapa", icon: Map },
+  { titleKey: "nav.cessionTemplates", url: "/app/plantillas-cesion", icon: FileText },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { t } = useTranslation();
 
   return (
     <Sidebar collapsible="icon">
@@ -45,15 +47,15 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navegación</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("nav.navigation")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.titleKey}>
                   <SidebarMenuButton
                     asChild
                     isActive={location.pathname.startsWith(item.url)}
-                    tooltip={item.title}
+                    tooltip={t(item.titleKey)}
                   >
                     <NavLink
                       to={item.url}
@@ -61,7 +63,7 @@ export function AppSidebar() {
                       activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     >
                       <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span>{t(item.titleKey)}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
