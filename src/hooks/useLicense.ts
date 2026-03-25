@@ -38,7 +38,7 @@ export function useLicense() {
 
   const validateMutation = useMutation({
     mutationFn: async (licenseKey: string) => {
-      const deviceHash = getDeviceHash();
+      const deviceHash = await getDeviceHash();
       const { data, error } = await supabase.functions.invoke("validate-license", {
         body: { license_key: licenseKey, device_hash: deviceHash },
       });
