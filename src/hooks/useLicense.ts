@@ -1,14 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-function getDeviceHash(): string {
-  const key = "app_device_hash";
-  let hash = localStorage.getItem(key);
-  if (!hash) {
-    hash = crypto.randomUUID();
-    localStorage.setItem(key, hash);
-  }
-  return hash;
+async function getDeviceHash(): Promise<string> {
+  const nav = navigator as any;
+  const parts = [
+    nav.userAgent || "",
+    nav.platform || "",
+    nav.language || "",
+    `${screen.width}x${screen.height}x${screen.colorDepth}`,
+    `cores:${nav.hardwareConcurrency || "?"}`,
+    `mem:${nav.deviceMemory || "?"}`,
+    Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+  ];
+  const raw = parts.join("|");
+  const encoder = new TextEncoder();
+  const data = encoder.encode(raw);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 export function useLicense() {
@@ -29,7 +38,7 @@ export function useLicense() {
 
   const validateMutation = useMutation({
     mutationFn: async (licenseKey: string) => {
-      const deviceHash = getDeviceHash();
+      const deviceHash = await getDeviceHash();
       const { data, error } = await supabase.functions.invoke("validate-license", {
         body: { license_key: licenseKey, device_hash: deviceHash },
       });
