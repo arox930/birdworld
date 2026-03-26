@@ -1,4 +1,4 @@
-import { LayoutDashboard, Map, Users, FileText, Bird } from "lucide-react";
+import { LayoutDashboard, Map, Users, FileText, Bird, Mail } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import logoImg from "@/assets/logo.png";
 import { useLocation } from "react-router-dom";
