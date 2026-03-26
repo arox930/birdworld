@@ -72,6 +72,16 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <div className="mt-auto border-t border-sidebar-border p-3">
+        <a
+          href="mailto:aaronalmeria@gmail.com"
+          className="flex items-center gap-2 text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors"
+        >
+          <Mail className="h-3.5 w-3.5 shrink-0" />
+          {!collapsed && <span>aaronalmeria@gmail.com</span>}
+        </a>
+      </div>
     </Sidebar>
   );
 }
