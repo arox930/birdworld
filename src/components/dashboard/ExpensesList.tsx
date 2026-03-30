@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,13 +8,18 @@ import { toast } from "sonner";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
 import { ExpenseFormDialog, type Expense } from "./ExpenseFormDialog";
 import { useTranslation } from "react-i18next";
+import type { DashboardFilters } from "@/hooks/useDashboardData";
 
-export function ExpensesList() {
+type Props = {
+  filters?: DashboardFilters;
+};
+
+export function ExpensesList({ filters }: Props) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
-  const { data: expenses = [], isLoading } = useQuery({
+  const { data: allExpenses = [], isLoading } = useQuery({
     queryKey: ["expenses-list"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -25,6 +30,16 @@ export function ExpensesList() {
       return data;
     },
   });
+
+  const expenses = useMemo(() => {
+    if (!filters) return allExpenses;
+    return allExpenses.filter((e) => {
+      if (filters.dateFrom && e.fecha < filters.dateFrom) return false;
+      if (filters.dateTo && e.fecha > filters.dateTo) return false;
+      if (filters.birdSpecies && e.categoria !== filters.birdSpecies) return false;
+      return true;
+    });
+  }, [allExpenses, filters]);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {

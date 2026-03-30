@@ -1,10 +1,20 @@
+import { useState } from "react";
 import { Wallet, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ExpensesList } from "@/components/dashboard/ExpensesList";
+import { DashboardFiltersBar } from "@/components/dashboard/DashboardFilters";
+import type { DashboardFilters } from "@/hooks/useDashboardData";
+
+const defaultFilters: DashboardFilters = {
+  dateFrom: null,
+  dateTo: null,
+  birdSpecies: null,
+};
 
 export default function Gastos() {
+  const [filters, setFilters] = useState<DashboardFilters>(defaultFilters);
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -22,7 +32,8 @@ export default function Gastos() {
           <p className="text-muted-foreground text-sm">{t("expenses.subtitle")}</p>
         </div>
       </div>
-      <ExpensesList />
+      <DashboardFiltersBar filters={filters} onChange={setFilters} />
+      <ExpensesList filters={filters} />
     </div>
   );
 }
