@@ -22,9 +22,7 @@ const BIRD_DEFAULT_TEMPLATE = `<p><b>DOCUMENTO DE CESIÓN</b></p>
 <p>Domicilio (Calle, nº, código postal, población, provincia):</p>
 <p>Nº de Núcleo Zoológico:</p>
 <p>Nº CATICE (SOIVRE):</p>
-<p><br></p>
 <p>Como actual propietario del siguiente ejemplar</p>
-<p><br></p>
 <p>Numero ejemplares: 1</p>
 <p>Especie (Nombre científico completo): {{especie}}</p>
 <p>Nombre común: {{nombre_comun}}</p>
@@ -34,22 +32,15 @@ const BIRD_DEFAULT_TEMPLATE = `<p><b>DOCUMENTO DE CESIÓN</b></p>
 <p>Identificación MITECO: {{miteco}}</p>
 <p>Anilla cerrada: {{anilla}}</p>
 <p>Microchip: {{microchip}}</p>
-<p><br></p>
 <p>Procedente de la cría en cautividad en la UE, de los parentales con la siguiente identificación</p>
-<p><br></p>
 <p>Macho, nº de microchip, código CITES, Identificación MITECO, Anilla cerrada: {{padre}}</p>
 <p>Hembra, nº de microchip, código CITES, Identificación MITECO, Anilla cerrada: {{madre}}</p>
-<p><br></p>
 <p>Cedo la posesión de dicho ejemplar, en perfectas condiciones, y de forma definitiva a:</p>
-<p><br></p>
 <p>Nombre y apellidos: {{nombre_comprador}} {{apellidos_comprador}}</p>
 <p>DNI: {{dni_comprador}}</p>
 <p>Domicilio: {{domicilio_comprador}}</p>
-<p><br></p>
 <p>Firmando el presente en Cuevas del Almanzora, a {{fecha_documento}}.</p>
-<p><br></p>
 <p>Documentación entregada: Documento de cesión, certificado de cría en cautividad, CITES original y sexaje.</p>
-<p><br></p>
 <p>Firma del criador&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Firma del receptor</p>`;
 
 const BIRD_VARIABLES = [
