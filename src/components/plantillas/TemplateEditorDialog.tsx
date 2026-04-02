@@ -2,10 +2,50 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, Wand2 } from "lucide-react";
 import { RichTextToolbar } from "./RichTextToolbar";
 
 const DEFAULT_HEADER = "<p><b>DOCUMENTO DE CESIÓN</b></p><p><br></p>";
+
+const BIRD_DEFAULT_TEMPLATE = `<p><b>DOCUMENTO DE CESIÓN</b></p>
+<p><br></p>
+<p><b>Datos del Criador/Propietario que cede la propiedad</b></p>
+<p><br></p>
+<p>Nombre: </p>
+<p>Apellidos: </p>
+<p>DNI: </p>
+<p>Domicilio (Calle, nº, código postal, población, provincia):</p>
+<p>Nº de Núcleo Zoológico:</p>
+<p>Nº CATICE (SOIVRE):</p>
+<p><br></p>
+<p>Como actual propietario del siguiente ejemplar</p>
+<p><br></p>
+<p>Numero ejemplares: 1</p>
+<p>Especie (Nombre científico completo): {{especie}}</p>
+<p>Nombre común: {{nombre_comun}}</p>
+<p>Sexo: {{sexo}}</p>
+<p>Fecha de nacimiento: {{fecha_nacimiento}}</p>
+<p>Código CITES: {{cites}}</p>
+<p>Identificación MITECO: {{miteco}}</p>
+<p>Anilla cerrada: {{anilla}}</p>
+<p>Microchip: {{microchip}}</p>
+<p><br></p>
+<p>Procedente de la cría en cautividad en la UE, de los parentales con la siguiente identificación</p>
+<p><br></p>
+<p>Macho, nº de microchip, código CITES, Identificación MITECO, Anilla cerrada: {{padre}}</p>
+<p>Hembra, nº de microchip, código CITES, Identificación MITECO, Anilla cerrada: {{madre}}</p>
+<p><br></p>
+<p>Cedo la posesión de dicho ejemplar, en perfectas condiciones, y de forma definitiva a:</p>
+<p><br></p>
+<p>Nombre y apellidos: {{nombre_comprador}} {{apellidos_comprador}}</p>
+<p>DNI: {{dni_comprador}}</p>
+<p>Domicilio: {{domicilio_comprador}}</p>
+<p><br></p>
+<p>Firmando el presente en Cuevas del Almanzora, a {{fecha_documento}}.</p>
+<p><br></p>
+<p>Documentación entregada: Documento de cesión, certificado de cría en cautividad, CITES original y sexaje.</p>
+<p><br></p>
+<p>Firma del criador&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Firma del receptor</p>`;
 
 const BIRD_VARIABLES = [
   { key: "{{nombre_comun}}", label: "Nombre común" },
@@ -128,6 +168,15 @@ export function TemplateEditorDialog({ open, onOpenChange, groupKey, animalType,
     setIsEmpty(!editorRef.current?.textContent?.trim());
   }, []);
 
+  const loadDefaultTemplate = useCallback(() => {
+    if (!editorRef.current) return;
+    const template = animalType === "bird" ? BIRD_DEFAULT_TEMPLATE : null;
+    if (template) {
+      editorRef.current.innerHTML = template;
+      setIsEmpty(false);
+    }
+  }, [animalType]);
+
   const handleSave = useCallback(() => {
     const html = editorRef.current?.innerHTML || "";
     onSave(html);
@@ -164,6 +213,18 @@ export function TemplateEditorDialog({ open, onOpenChange, groupKey, animalType,
               ))}
             </div>
           </div>
+
+          {animalType === "bird" && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={loadDefaultTemplate}
+            >
+              <Wand2 className="h-3.5 w-3.5" />
+              Usar plantilla predeterminada
+            </Button>
+          )}
 
           <div>
             <RichTextToolbar editorRef={editorRef} />
