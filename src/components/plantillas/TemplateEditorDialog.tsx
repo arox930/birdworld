@@ -168,6 +168,15 @@ export function TemplateEditorDialog({ open, onOpenChange, groupKey, animalType,
     setIsEmpty(!editorRef.current?.textContent?.trim());
   }, []);
 
+  const loadDefaultTemplate = useCallback(() => {
+    if (!editorRef.current) return;
+    const template = animalType === "bird" ? BIRD_DEFAULT_TEMPLATE : null;
+    if (template) {
+      editorRef.current.innerHTML = template;
+      setIsEmpty(false);
+    }
+  }, [animalType]);
+
   const handleSave = useCallback(() => {
     const html = editorRef.current?.innerHTML || "";
     onSave(html);
