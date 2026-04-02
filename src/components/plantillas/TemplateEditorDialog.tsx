@@ -1,5 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Loader2, Wand2 } from "lucide-react";
@@ -8,9 +15,7 @@ import { RichTextToolbar } from "./RichTextToolbar";
 const DEFAULT_HEADER = "<p><b>DOCUMENTO DE CESIÓN</b></p><p><br></p>";
 
 const BIRD_DEFAULT_TEMPLATE = `<p><b>DOCUMENTO DE CESIÓN</b></p>
-<p><br></p>
 <p><b>Datos del Criador/Propietario que cede la propiedad</b></p>
-<p><br></p>
 <p>Nombre: </p>
 <p>Apellidos: </p>
 <p>DNI: </p>
@@ -92,7 +97,15 @@ interface Props {
   saving: boolean;
 }
 
-export function TemplateEditorDialog({ open, onOpenChange, groupKey, animalType, initialContent, onSave, saving }: Props) {
+export function TemplateEditorDialog({
+  open,
+  onOpenChange,
+  groupKey,
+  animalType,
+  initialContent,
+  onSave,
+  saving,
+}: Props) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isEmpty, setIsEmpty] = useState(true);
 
@@ -131,9 +144,7 @@ export function TemplateEditorDialog({ open, onOpenChange, groupKey, animalType,
     }
   }, [open, initialContent]);
 
-  const displayLabel = animalType === "bird"
-    ? groupKey.replace("::", " — ")
-    : groupKey;
+  const displayLabel = animalType === "bird" ? groupKey.replace("::", " — ") : groupKey;
 
   const variables = animalType === "bird" ? BIRD_VARIABLES : DOG_VARIABLES;
 
@@ -190,9 +201,7 @@ export function TemplateEditorDialog({ open, onOpenChange, groupKey, animalType,
             <FileText className="h-5 w-5 text-primary" />
             Plantilla: {displayLabel}
           </DialogTitle>
-          <DialogDescription>
-            Edita el contenido del documento de cesión con formato enriquecido.
-          </DialogDescription>
+          <DialogDescription>Edita el contenido del documento de cesión con formato enriquecido.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -215,12 +224,7 @@ export function TemplateEditorDialog({ open, onOpenChange, groupKey, animalType,
           </div>
 
           {animalType === "bird" && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              onClick={loadDefaultTemplate}
-            >
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={loadDefaultTemplate}>
               <Wand2 className="h-3.5 w-3.5" />
               Usar plantilla predeterminada
             </Button>
