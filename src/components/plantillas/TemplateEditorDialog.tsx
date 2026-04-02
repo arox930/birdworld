@@ -214,6 +214,18 @@ export function TemplateEditorDialog({ open, onOpenChange, groupKey, animalType,
             </div>
           </div>
 
+          {animalType === "bird" && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={loadDefaultTemplate}
+            >
+              <Wand2 className="h-3.5 w-3.5" />
+              Usar plantilla predeterminada
+            </Button>
+          )}
+
           <div>
             <RichTextToolbar editorRef={editorRef} />
             <div
