@@ -467,11 +467,68 @@ serve(async (req) => {
       animal_id, animal_type, buyer_id, precio,
       vendedor_nombre, vendedor_dni, vendedor_domicilio,
       preview_only, rendered_html, buyer_override,
+      test_pdf, template_content, template_animal_type,
     } = await req.json();
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
+
+    // --- Test PDF mode: fill template with dummy data and return PDF ---
+    if (test_pdf && template_content) {
+      const dummyVars: Record<string, string> = template_animal_type === "bird"
+        ? {
+            nombre_comun: "Canario",
+            especie: "Serinus canaria",
+            sexo: "Macho",
+            fecha_nacimiento: "15-03-2024",
+            cites: "ES-1234/2024",
+            anilla: "ABC-001",
+            microchip: "900123456789012",
+            miteco: "MT-2024-00001",
+            padre: "XYZ-099",
+            madre: "XYZ-100",
+            nombre_comprador: "Juan",
+            apellidos_comprador: "García López",
+            dni_comprador: "12345678A",
+            domicilio_comprador: "Calle Ejemplo 1, 28001 Madrid",
+            fecha_documento: new Date().toISOString().slice(0, 10).split('-').reverse().join('-'),
+            precio: "150.00",
+            vendedor_nombre: "María Pérez Ruiz",
+            vendedor_dni: "87654321B",
+            vendedor_domicilio: "Av. de la Constitución 10, 41001 Sevilla",
+          }
+        : {
+            nombre: "Rocky",
+            raza: "Pastor Alemán",
+            color: "Negro y fuego",
+            sexo: "Macho",
+            fecha_nacimiento: "01-06-2024",
+            microchip: "900123456789012",
+            pedigree: "LOE-123456",
+            nombre_comprador: "Juan",
+            apellidos_comprador: "García López",
+            dni_comprador: "12345678A",
+            domicilio_comprador: "Calle Ejemplo 1, 28001 Madrid",
+            fecha_documento: new Date().toISOString().slice(0, 10).split('-').reverse().join('-'),
+            precio: "500.00",
+            vendedor_nombre: "María Pérez Ruiz",
+            vendedor_dni: "87654321B",
+            vendedor_domicilio: "Av. de la Constitución 10, 41001 Sevilla",
+          };
+
+      const renderedTest = replaceTemplateVars(template_content, dummyVars);
+      const blocks = parseHtml(renderedTest);
+      const pdfBytes = buildPdf(blocks);
+
+      return new Response(pdfBytes, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/pdf",
+          "Content-Disposition": 'attachment; filename="cesion_prueba.pdf"',
+        },
+      });
+    }
 
     // For preview with new buyer, use buyer_override data instead of fetching from DB
     let buyer: any;
