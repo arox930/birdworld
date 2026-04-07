@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "birds": "Birds",
+    "pairs": "Pairs",
     "buyers": "Buyers",
     "map": "Map",
     "cessionTemplates": "Cession Templates",
@@ -223,5 +224,15 @@
   },
   "filters": {
     "species": "Species"
+  },
+  "pairs": {
+    "title": "Pairs",
+    "pair": "pair",
+    "pairsPlural": "pairs",
+    "searchPlaceholder": "Search by ring, microchip, zone, comments...",
+    "noPairs": "No pairs registered",
+    "pairDetail": "Pair detail",
+    "offspring": "Offspring",
+    "noOffspring": "This pair has no registered offspring"
   }
 }

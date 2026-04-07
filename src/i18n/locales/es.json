@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "birds": "Aves",
+    "pairs": "Parejas",
     "buyers": "Compradores",
     "map": "Mapa",
     "cessionTemplates": "Plantillas de Cesión",
@@ -223,5 +224,15 @@
   },
   "filters": {
     "species": "Especie"
+  },
+  "pairs": {
+    "title": "Parejas",
+    "pair": "pareja",
+    "pairsPlural": "parejas",
+    "searchPlaceholder": "Buscar por anilla, microchip, zona, comentarios...",
+    "noPairs": "No hay parejas registradas",
+    "pairDetail": "Detalle de la pareja",
+    "offspring": "Crías",
+    "noOffspring": "Esta pareja no tiene crías registradas"
   }
 }

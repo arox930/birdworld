@@ -2,6 +2,7 @@
   "nav": {
     "dashboard": "Tableau de bord",
     "birds": "Oiseaux",
+    "pairs": "Couples",
     "buyers": "Acheteurs",
     "map": "Carte",
     "cessionTemplates": "Modèles de cession",
@@ -223,5 +224,15 @@
   },
   "filters": {
     "species": "Espèce"
+  },
+  "pairs": {
+    "title": "Couples",
+    "pair": "couple",
+    "pairsPlural": "couples",
+    "searchPlaceholder": "Rechercher par bague, micropuce, zone, commentaires...",
+    "noPairs": "Aucun couple enregistré",
+    "pairDetail": "Détail du couple",
+    "offspring": "Progéniture",
+    "noOffspring": "Ce couple n'a pas de progéniture enregistrée"
   }
 }
