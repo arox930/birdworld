@@ -41,7 +41,7 @@ const BIRD_DEFAULT_TEMPLATE = `<p><b>DOCUMENTO DE CESIÓN</b></p>
 <p>Domicilio: {{domicilio_comprador}}</p>
 <p>Firmando el presente en Cuevas del Almanzora, a {{fecha_documento}}.</p>
 <p>Documentación entregada: Documento de cesión, certificado de cría en cautividad, CITES original y sexaje.</p>
-<p>Firma del criador&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Firma del receptor</p>`;
+<p>Firma del criador                                                        Firma del receptor</p>`;
 
 const BIRD_VARIABLES = [
   { key: "{{nombre_comun}}", label: "Nombre común" },
