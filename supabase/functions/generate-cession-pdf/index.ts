@@ -36,7 +36,7 @@ function tokenize(html: string): Token[] {
   const re = /<\/?([a-zA-Z][a-zA-Z0-9]*)\b([^>]*)\/?>|<!--[\s\S]*?-->|([^<]+)/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(html)) !== null) {
-    if (m[0].startsWith("<!--")) continue; // skip comments
+    if (m[0].startsWith("<!--")) continue;
     if (m[3] !== undefined) {
       tokens.push({ type: "text", text: m[3] });
     } else {
@@ -108,7 +108,6 @@ function parseHtml(html: string): Block[] {
   const blocks: Block[] = [];
   let pos = 0;
 
-  // Current inline accumulator
   let currentSpans: Span[] = [];
   let currentAlign: "left" | "center" | "right" = "left";
 
@@ -117,7 +116,6 @@ function parseHtml(html: string): Block[] {
     if (hasContent) {
       blocks.push({ spans: [...currentSpans], align: currentAlign });
     } else if (forceEmpty) {
-      // Preserve empty paragraphs as spacing
       blocks.push({ spans: [{ text: "", bold: false, underline: false, fontSize: 11, color: "#000000" }], align: currentAlign });
     }
     currentSpans = [];
@@ -144,39 +142,34 @@ function parseHtml(html: string): Block[] {
 
       if (tok.type === "close") {
         pos++;
-        return; // exit to parent
+        return;
       }
 
       if (tok.type === "self") {
         pos++;
         if (tok.tag === "br") {
-          // Flush current line and start new one
           flushInline();
           currentAlign = blockAlign;
         }
         continue;
       }
 
-      // Open tag
       if (tok.type === "open") {
         const tag = tok.tag!;
         const attrs = tok.attrs || "";
         pos++;
 
         if (BLOCK_TAGS.has(tag)) {
-          // Flush any accumulated inline content first
           flushInline();
           
           const align = getAlign(attrs) || blockAlign;
           currentAlign = align;
 
-          // Determine font size for headings
           const newStyle = { ...style };
           if (tag === "h1") { newStyle.fontSize = 24; newStyle.bold = true; }
           else if (tag === "h2") { newStyle.fontSize = 20; newStyle.bold = true; }
           else if (tag === "h3") { newStyle.fontSize = 16; newStyle.bold = true; }
 
-          // Check for inline styles on block element
           const fs = getStyleAttr(attrs, "font-size");
           if (fs) {
             const n = parseFloat(fs);
@@ -193,15 +186,13 @@ function parseHtml(html: string): Block[] {
 
           walk(newStyle, align);
 
-          // Flush what we collected inside this block - force empty to preserve spacing
           flushInline(true);
           currentAlign = blockAlign;
         } else {
-          // Inline tag
           const newStyle = { ...style };
           if (tag === "b" || tag === "strong") newStyle.bold = true;
           if (tag === "u" || tag === "ins") newStyle.underline = true;
-          if (tag === "i" || tag === "em") { /* italic not supported, skip */ }
+          if (tag === "i" || tag === "em") { /* italic not supported */ }
 
           if (tag === "span" || tag === "font") {
             const fs = getStyleAttr(attrs, "font-size");
@@ -209,11 +200,9 @@ function parseHtml(html: string): Block[] {
               const n = parseFloat(fs);
               if (n > 0) newStyle.fontSize = n;
             }
-            // color - more careful regex to not match background-color
             const styleStr = (attrs.match(/style\s*=\s*"([^"]*)"/i) || [])[1] || "";
             const colorMatch = styleStr.match(/(?:^|;\s*)color\s*:\s*([^;]+)/i);
             if (colorMatch) {
-              // Make sure it's not background-color
               const prefix = styleStr.substring(0, styleStr.indexOf(colorMatch[0]));
               if (!prefix.endsWith("background-") && !prefix.endsWith("bg")) {
                 newStyle.color = normalizeColor(colorMatch[1]);
@@ -224,7 +213,6 @@ function parseHtml(html: string): Block[] {
             const td = getStyleAttr(attrs, "text-decoration");
             if (td && td.includes("underline")) newStyle.underline = true;
 
-            // font tag color attribute
             const colorAttr = attrs.match(/color\s*=\s*"([^"]*)"/i);
             if (colorAttr) newStyle.color = normalizeColor(colorAttr[1]);
           }
@@ -236,9 +224,8 @@ function parseHtml(html: string): Block[] {
   }
 
   walk({ bold: false, underline: false, fontSize: 11, color: "#000000" }, "left");
-  flushInline(); // flush remaining
+  flushInline();
 
-  // If nothing parsed, try plain text fallback
   if (blocks.length === 0 && html.trim()) {
     const plain = html.replace(/<[^>]*>/g, "");
     for (const line of decodeEntities(plain).split("\n")) {
@@ -272,7 +259,6 @@ const HELVETICA_WIDTHS: Record<string, number> = {
   'ü': 556, 'Ü': 722, 'º': 370, 'ª': 370, '¿': 611, '¡': 333, '€': 556, '°': 400,
 };
 
-// Bold widths are ~5-8% wider on average; approximate by multiplying
 function measureText(text: string, fontSize: number, bold = false): number {
   let w = 0;
   for (let i = 0; i < text.length; i++) {
@@ -303,14 +289,12 @@ function toHex(s: string): string {
   return hex;
 }
 
-// Word-wrap spans into multiple visual lines
 function wrapBlock(block: Block, maxWidth: number): { spans: Span[]; align: "left" | "center" | "right" }[] {
   const lines: { spans: Span[]; align: typeof block.align }[] = [];
   let curSpans: Span[] = [];
   let curW = 0;
 
   for (const span of block.spans) {
-    // Split by words (keeping spaces)
     const parts = span.text.split(/(\s+)/);
     let buf = "";
 
@@ -322,7 +306,7 @@ function wrapBlock(block: Block, maxWidth: number): { spans: Span[]; align: "lef
         lines.push({ spans: curSpans, align: block.align });
         curSpans = [];
         curW = 0;
-        buf = part.replace(/^\s+/, ""); // trim leading whitespace on new line
+        buf = part.replace(/^\s+/, "");
       } else {
         buf += part;
       }
@@ -342,22 +326,85 @@ function wrapBlock(block: Block, maxWidth: number): { spans: Span[]; align: "lef
   return lines;
 }
 
-function buildPdf(blocks: Block[]): Uint8Array {
+// ===================== Image helpers =====================
+
+interface LogoImage {
+  bytes: Uint8Array;
+  width: number;
+  height: number;
+  isJpeg: boolean;
+}
+
+function parseJpegDimensions(data: Uint8Array): { width: number; height: number } | null {
+  let i = 2;
+  while (i < data.length - 1) {
+    if (data[i] !== 0xFF) break;
+    const marker = data[i + 1];
+    if (marker === 0xC0 || marker === 0xC1 || marker === 0xC2) {
+      const height = (data[i + 5] << 8) | data[i + 6];
+      const width = (data[i + 7] << 8) | data[i + 8];
+      return { width, height };
+    }
+    const len = (data[i + 2] << 8) | data[i + 3];
+    i += 2 + len;
+  }
+  return null;
+}
+
+function parsePngDimensions(data: Uint8Array): { width: number; height: number } | null {
+  // PNG signature check
+  if (data[0] !== 0x89 || data[1] !== 0x50) return null;
+  // IHDR chunk starts at byte 8, width at 16, height at 20
+  const width = (data[16] << 24) | (data[17] << 16) | (data[18] << 8) | data[19];
+  const height = (data[20] << 24) | (data[21] << 16) | (data[22] << 8) | data[23];
+  return { width, height };
+}
+
+// ===================== Build PDF with optional logo =====================
+
+function buildPdf(blocks: Block[], logo?: LogoImage): Uint8Array {
   const enc = new TextEncoder();
   const PW = 595, PH = 842, M = 50;
   const UW = PW - M * 2;
 
+  // Logo dimensions for placement (max 80pt tall, proportional)
+  let logoDrawW = 0, logoDrawH = 0;
+  if (logo) {
+    const maxH = 80;
+    const maxW = 150;
+    const scale = Math.min(maxW / logo.width, maxH / logo.height, 1);
+    logoDrawW = logo.width * scale;
+    logoDrawH = logo.height * scale;
+  }
+
   const pageStreams: string[] = [];
   let s = "";
   let y = PH - M;
+  let isFirstPage = true;
 
-  const newPage = () => { pageStreams.push(s); s = ""; y = PH - M; };
+  const addLogoToPage = () => {
+    if (logo && isFirstPage) {
+      // Place logo at top-right corner
+      const lx = PW - M - logoDrawW;
+      const ly = PH - M - logoDrawH;
+      s += `q\n`;
+      s += `${logoDrawW.toFixed(2)} 0 0 ${logoDrawH.toFixed(2)} ${lx.toFixed(2)} ${ly.toFixed(2)} cm\n`;
+      s += `/Im1 Do\n`;
+      s += `Q\n`;
+      // Reserve space for logo area on right side (adjust y if needed)
+      y = Math.min(y, PH - M - logoDrawH - 10);
+    }
+  };
+
+  const newPage = () => { pageStreams.push(s); s = ""; y = PH - M; isFirstPage = false; };
+
+  // Add logo on first page
+  addLogoToPage();
 
   for (const block of blocks) {
-    // Check if this is an empty block (empty paragraph = vertical spacing)
     const isEmpty = block.spans.every(sp => sp.text.trim() === "");
     if (isEmpty) {
-      const emptyLh = 11 * 1.15; // moderate line height for empty paragraphs
+      const emptyLh = 11 * 1.15;
       y -= emptyLh;
       if (y < M) newPage();
       continue;
@@ -371,7 +418,6 @@ function buildPdf(blocks: Block[]): Uint8Array {
 
       if (y - lh < M) newPage();
 
-      // Measure total width for alignment
       let totalW = 0;
       for (const sp of vl.spans) totalW += measureText(sp.text, sp.fontSize, sp.bold);
 
@@ -402,7 +448,6 @@ function buildPdf(blocks: Block[]): Uint8Array {
       y -= lh;
     }
 
-    // Paragraph spacing between blocks
     y -= 5;
   }
 
@@ -413,29 +458,134 @@ function buildPdf(blocks: Block[]): Uint8Array {
   let oc = 0;
   const add = (c: string) => { oc++; objs.push(`${oc} 0 obj\n${c}\nendobj\n`); return oc; };
 
+  // 1: Catalog
   add(`<< /Type /Catalog /Pages 2 0 R >>`);
+  // 2: Pages (placeholder, will be filled)
   const np = pageStreams.length;
-  const fp = 5;
-  const kids = Array.from({ length: np }, (_, i) => `${fp + i * 2} 0 R`).join(" ");
-  add(`<< /Type /Pages /Kids [${kids}] /Count ${np} >>`);
+  
+  // 3: Font Helvetica
   add(`<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>`);
+  // 4: Font Helvetica-Bold
   add(`<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>`);
 
-  for (let i = 0; i < np; i++) {
-    const sb = enc.encode(pageStreams[i]);
-    const sid = fp + i * 2 + 1;
-    add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Contents ${sid} 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>`);
-    add(`<< /Length ${sb.length} >>\nstream\n${new TextDecoder().decode(sb)}\nendstream`);
+  // 5: Image XObject (if logo)
+  let imgObjId = 0;
+  if (logo) {
+    const filter = logo.isJpeg ? "/DCTDecode" : "/FlateDecode";
+    const colorSpace = "/DeviceRGB";
+    // For JPEG, we embed the raw bytes directly
+    // For PNG, we'd need to extract the raw image data - for simplicity we handle JPEG
+    const imgStream = logo.bytes;
+    const imgDict = `<< /Type /XObject /Subtype /Image /Width ${logo.width} /Height ${logo.height} /ColorSpace ${colorSpace} /BitsPerComponent 8 /Filter ${filter} /Length ${imgStream.length} >>`;
+    oc++;
+    imgObjId = oc;
+    // Build binary object
+    const header = enc.encode(`${oc} 0 obj\n${imgDict}\nstream\n`);
+    const footer = enc.encode(`\nendstream\nendobj\n`);
+    // We'll handle this specially in the binary assembly
+    objs.push(`__IMAGE__`); // placeholder
   }
 
-  let pdf = `%PDF-1.4\n`;
-  const offs: number[] = [];
-  for (const o of objs) { offs.push(pdf.length); pdf += o; }
-  const xr = pdf.length;
-  pdf += `xref\n0 ${oc + 1}\n0000000000 65535 f \n`;
-  for (const o of offs) pdf += `${String(o).padStart(10, "0")} 00000 n \n`;
-  pdf += `trailer\n<< /Size ${oc + 1} /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`;
-  return enc.encode(pdf);
+  // Pages object (obj 2) - need to build after knowing page object IDs
+  const firstPageObjId = oc + 1;
+  
+  // Build resources dict
+  let resourcesDict = `/Font << /F1 3 0 R /F2 4 0 R >>`;
+  if (logo && imgObjId) {
+    resourcesDict += ` /XObject << /Im1 ${imgObjId} 0 R >>`;
+  }
+
+  const pageObjIds: number[] = [];
+  for (let i = 0; i < np; i++) {
+    const sb = enc.encode(pageStreams[i]);
+    oc++;
+    pageObjIds.push(oc);
+    const contentId = oc + 1;
+    objs.push(`${oc} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Contents ${contentId} 0 R /Resources << ${resourcesDict} >> >>\nendobj\n`);
+    oc++;
+    objs.push(`${oc} 0 obj\n<< /Length ${sb.length} >>\nstream\n${new TextDecoder().decode(sb)}\nendstream\nendobj\n`);
+  }
+
+  // Now build the actual PDF binary
+  const kids = pageObjIds.map(id => `${id} 0 R`).join(" ");
+  const pagesObj = `2 0 obj\n<< /Type /Pages /Kids [${kids}] /Count ${np} >>\nendobj\n`;
+
+  // Assemble everything as binary to handle image stream
+  const parts: Uint8Array[] = [];
+  const headerBytes = enc.encode(`%PDF-1.4\n`);
+  parts.push(headerBytes);
+
+  const offsets: number[] = [];
+  let currentOffset = headerBytes.length;
+
+  // Object 1 (Catalog)
+  const obj1 = enc.encode(objs[0]);
+  offsets.push(currentOffset);
+  parts.push(obj1);
+  currentOffset += obj1.length;
+
+  // Object 2 (Pages) 
+  const obj2 = enc.encode(pagesObj);
+  offsets.push(currentOffset);
+  parts.push(obj2);
+  currentOffset += obj2.length;
+
+  // Object 3 (Font1)
+  const obj3 = enc.encode(objs[1]);
+  offsets.push(currentOffset);
+  parts.push(obj3);
+  currentOffset += obj3.length;
+
+  // Object 4 (Font2)
+  const obj4 = enc.encode(objs[2]);
+  offsets.push(currentOffset);
+  parts.push(obj4);
+  currentOffset += obj4.length;
+
+  // Object 5 (Image, if present)
+  let objIndex = 3; // next index in objs array
+  if (logo && imgObjId) {
+    offsets.push(currentOffset);
+    const imgHeader = enc.encode(`${imgObjId} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${logo.width} /Height ${logo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter ${logo.isJpeg ? "/DCTDecode" : "/FlateDecode"} /Length ${logo.bytes.length} >>\nstream\n`);
+    parts.push(imgHeader);
+    currentOffset += imgHeader.length;
+    parts.push(logo.bytes);
+    currentOffset += logo.bytes.length;
+    const imgFooter = enc.encode(`\nendstream\nendobj\n`);
+    parts.push(imgFooter);
+    currentOffset += imgFooter.length;
+    objIndex++; // skip the placeholder
+  }
+
+  // Page and content stream objects
+  for (let i = objIndex; i < objs.length; i++) {
+    offsets.push(currentOffset);
+    const objBytes = enc.encode(objs[i]);
+    parts.push(objBytes);
+    currentOffset += objBytes.length;
+  }
+
+  // Cross-reference table
+  const xrefOffset = currentOffset;
+  const totalObjs = oc + 1;
+  let xref = `xref\n0 ${totalObjs}\n0000000000 65535 f \n`;
+  for (const o of offsets) {
+    xref += `${String(o).padStart(10, "0")} 00000 n \n`;
+  }
+  xref += `trailer\n<< /Size ${totalObjs} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  parts.push(enc.encode(xref));
+
+  // Combine all parts
+  let totalLen = 0;
+  for (const p of parts) totalLen += p.length;
+  const result = new Uint8Array(totalLen);
+  let offset = 0;
+  for (const p of parts) {
+    result.set(p, offset);
+    offset += p.length;
+  }
+
+  return result;
 }
 
 // ===================== Template Logic =====================
@@ -453,6 +603,45 @@ function formatDate(dateStr: string): string {
   const parts = dateStr.split('-');
   if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
   return dateStr;
+}
+
+// ===================== Fetch logo from storage =====================
+
+async function fetchLogo(supabase: any): Promise<LogoImage | undefined> {
+  try {
+    const { data: files } = await supabase.storage.from("uploads").list("", { search: "cession-logo" });
+    const logoFile = files?.find((f: any) => f.name.startsWith("cession-logo"));
+    if (!logoFile) return undefined;
+
+    const { data, error } = await supabase.storage.from("uploads").download(logoFile.name);
+    if (error || !data) return undefined;
+
+    const arrayBuf = await data.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuf);
+
+    const isJpeg = bytes[0] === 0xFF && bytes[1] === 0xD8;
+    const isPng = bytes[0] === 0x89 && bytes[1] === 0x50;
+
+    let dims: { width: number; height: number } | null = null;
+    if (isJpeg) {
+      dims = parseJpegDimensions(bytes);
+    } else if (isPng) {
+      dims = parsePngDimensions(bytes);
+      // For PNG we'd need to decode to raw RGB - not trivial in raw PDF
+      // We'll only support JPEG for now; if PNG, skip
+      // Actually let's try: we can re-encode as... no. Let's just support JPEG.
+      // For PNG files, we won't embed them (too complex without a library).
+      console.log("PNG logo detected - only JPEG logos are supported for PDF embedding");
+      return undefined;
+    }
+
+    if (!dims) return undefined;
+
+    return { bytes, width: dims.width, height: dims.height, isJpeg: true };
+  } catch (e) {
+    console.error("Error fetching logo:", e);
+    return undefined;
+  }
 }
 
 // ===================== Server =====================
@@ -474,7 +663,10 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // --- Test PDF mode: fill template with dummy data and return PDF ---
+    // Fetch logo for all PDF generation
+    const logo = await fetchLogo(supabase);
+
+    // --- Test PDF mode ---
     if (test_pdf && template_content) {
       const dummyVars: Record<string, string> = template_animal_type === "bird"
         ? {
@@ -519,7 +711,7 @@ serve(async (req) => {
 
       const renderedTest = replaceTemplateVars(template_content, dummyVars);
       const blocks = parseHtml(renderedTest);
-      const pdfBytes = buildPdf(blocks);
+      const pdfBytes = buildPdf(blocks, logo);
 
       return new Response(pdfBytes, {
         headers: {
@@ -541,8 +733,8 @@ serve(async (req) => {
       buyer = buyerData;
     }
 
-    const todayISO = new Date().toISOString().slice(0, 10); // YYYY-MM-DD for DB
-    const today = todayISO.split('-').reverse().join('-'); // DD-MM-YYYY for display
+    const todayISO = new Date().toISOString().slice(0, 10);
+    const today = todayISO.split('-').reverse().join('-');
     let templateGroupKey = "";
     let templateVars: Record<string, string> = {};
 
@@ -630,7 +822,7 @@ serve(async (req) => {
 
     const finalHtml = rendered_html || rendered;
     const blocks = parseHtml(finalHtml);
-    const pdfBytes = buildPdf(blocks);
+    const pdfBytes = buildPdf(blocks, logo);
 
     // Upload
     const fileName = `cesion_${animal_type}_${animal_id}_${Date.now()}.pdf`;
