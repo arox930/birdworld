@@ -453,129 +453,107 @@ function buildPdf(blocks: Block[], logo?: LogoImage): Uint8Array {
 
   pageStreams.push(s);
 
-  // Assemble PDF
-  const objs: string[] = [];
-  let oc = 0;
-  const add = (c: string) => { oc++; objs.push(`${oc} 0 obj\n${c}\nendobj\n`); return oc; };
+  // Assemble PDF with proper object numbering
+  // Object layout:
+  //   1: Catalog
+  //   2: Pages
+  //   3: Font Helvetica
+  //   4: Font Helvetica-Bold
+  //   5: Image XObject (if logo, otherwise first page)
+  //   N+: Page objects and content streams
 
-  // 1: Catalog
-  add(`<< /Type /Catalog /Pages 2 0 R >>`);
-  // 2: Pages (placeholder, will be filled)
+  const enc2 = enc; // reuse
   const np = pageStreams.length;
-  
-  // 3: Font Helvetica
-  add(`<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>`);
-  // 4: Font Helvetica-Bold
-  add(`<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>`);
 
-  // 5: Image XObject (if logo)
-  let imgObjId = 0;
-  if (logo) {
-    const filter = logo.isJpeg ? "/DCTDecode" : "/FlateDecode";
-    const colorSpace = "/DeviceRGB";
-    // For JPEG, we embed the raw bytes directly
-    // For PNG, we'd need to extract the raw image data - for simplicity we handle JPEG
-    const imgStream = logo.bytes;
-    const imgDict = `<< /Type /XObject /Subtype /Image /Width ${logo.width} /Height ${logo.height} /ColorSpace ${colorSpace} /BitsPerComponent 8 /Filter ${filter} /Length ${imgStream.length} >>`;
-    oc++;
-    imgObjId = oc;
-    // Build binary object
-    const header = enc.encode(`${oc} 0 obj\n${imgDict}\nstream\n`);
-    const footer = enc.encode(`\nendstream\nendobj\n`);
-    // We'll handle this specially in the binary assembly
-    objs.push(`__IMAGE__`); // placeholder
-  }
+  // Determine object IDs
+  const imgObjId = logo ? 5 : 0;
+  const firstPageObj = logo ? 6 : 5;
 
-  // Pages object (obj 2) - need to build after knowing page object IDs
-  const firstPageObjId = oc + 1;
-  
   // Build resources dict
   let resourcesDict = `/Font << /F1 3 0 R /F2 4 0 R >>`;
-  if (logo && imgObjId) {
+  if (logo) {
     resourcesDict += ` /XObject << /Im1 ${imgObjId} 0 R >>`;
   }
 
+  // Build page + content stream objects
   const pageObjIds: number[] = [];
+  const textObjs: { id: number; content: string }[] = [];
+  let nextId = firstPageObj;
   for (let i = 0; i < np; i++) {
-    const sb = enc.encode(pageStreams[i]);
-    oc++;
-    pageObjIds.push(oc);
-    const contentId = oc + 1;
-    objs.push(`${oc} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Contents ${contentId} 0 R /Resources << ${resourcesDict} >> >>\nendobj\n`);
-    oc++;
-    objs.push(`${oc} 0 obj\n<< /Length ${sb.length} >>\nstream\n${new TextDecoder().decode(sb)}\nendstream\nendobj\n`);
+    const pageId = nextId++;
+    const contentId = nextId++;
+    pageObjIds.push(pageId);
+    const sb = enc2.encode(pageStreams[i]);
+    textObjs.push({
+      id: pageId,
+      content: `${pageId} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Contents ${contentId} 0 R /Resources << ${resourcesDict} >> >>\nendobj\n`,
+    });
+    textObjs.push({
+      id: contentId,
+      content: `${contentId} 0 obj\n<< /Length ${sb.length} >>\nstream\n${new TextDecoder().decode(sb)}\nendstream\nendobj\n`,
+    });
   }
 
-  // Now build the actual PDF binary
+  const totalObjCount = nextId - 1; // last used ID
   const kids = pageObjIds.map(id => `${id} 0 R`).join(" ");
-  const pagesObj = `2 0 obj\n<< /Type /Pages /Kids [${kids}] /Count ${np} >>\nendobj\n`;
 
-  // Assemble everything as binary to handle image stream
+  // Now assemble the binary PDF
   const parts: Uint8Array[] = [];
-  const headerBytes = enc.encode(`%PDF-1.4\n`);
+  const offsets: number[] = new Array(totalObjCount).fill(0);
+  const headerBytes = enc2.encode(`%PDF-1.4\n`);
   parts.push(headerBytes);
-
-  const offsets: number[] = [];
   let currentOffset = headerBytes.length;
 
-  // Object 1 (Catalog)
-  const obj1 = enc.encode(objs[0]);
-  offsets.push(currentOffset);
-  parts.push(obj1);
-  currentOffset += obj1.length;
+  const writeTextObj = (id: number, content: string) => {
+    const bytes = enc2.encode(content);
+    offsets[id - 1] = currentOffset;
+    parts.push(bytes);
+    currentOffset += bytes.length;
+  };
 
-  // Object 2 (Pages) 
-  const obj2 = enc.encode(pagesObj);
-  offsets.push(currentOffset);
-  parts.push(obj2);
-  currentOffset += obj2.length;
+  // 1: Catalog
+  writeTextObj(1, `1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n`);
 
-  // Object 3 (Font1)
-  const obj3 = enc.encode(objs[1]);
-  offsets.push(currentOffset);
-  parts.push(obj3);
-  currentOffset += obj3.length;
+  // 2: Pages
+  writeTextObj(2, `2 0 obj\n<< /Type /Pages /Kids [${kids}] /Count ${np} >>\nendobj\n`);
 
-  // Object 4 (Font2)
-  const obj4 = enc.encode(objs[2]);
-  offsets.push(currentOffset);
-  parts.push(obj4);
-  currentOffset += obj4.length;
+  // 3: Font1
+  writeTextObj(3, `3 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n`);
 
-  // Object 5 (Image, if present)
-  let objIndex = 3; // next index in objs array
-  if (logo && imgObjId) {
-    offsets.push(currentOffset);
-    const imgHeader = enc.encode(`${imgObjId} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${logo.width} /Height ${logo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter ${logo.isJpeg ? "/DCTDecode" : "/FlateDecode"} /Length ${logo.bytes.length} >>\nstream\n`);
+  // 4: Font2
+  writeTextObj(4, `4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>\nendobj\n`);
+
+  // 5: Image (if logo)
+  if (logo) {
+    offsets[imgObjId - 1] = currentOffset;
+    const imgHeader = enc2.encode(`${imgObjId} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${logo.width} /Height ${logo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${logo.bytes.length} >>\nstream\n`);
     parts.push(imgHeader);
     currentOffset += imgHeader.length;
     parts.push(logo.bytes);
     currentOffset += logo.bytes.length;
-    const imgFooter = enc.encode(`\nendstream\nendobj\n`);
+    const imgFooter = enc2.encode(`\nendstream\nendobj\n`);
     parts.push(imgFooter);
     currentOffset += imgFooter.length;
-    objIndex++; // skip the placeholder
   }
 
-  // Page and content stream objects
-  for (let i = objIndex; i < objs.length; i++) {
-    offsets.push(currentOffset);
-    const objBytes = enc.encode(objs[i]);
-    parts.push(objBytes);
-    currentOffset += objBytes.length;
+  // Page and content objects
+  for (const obj of textObjs) {
+    offsets[obj.id - 1] = currentOffset;
+    const bytes = enc2.encode(obj.content);
+    parts.push(bytes);
+    currentOffset += bytes.length;
   }
 
   // Cross-reference table
   const xrefOffset = currentOffset;
-  const totalObjs = oc + 1;
-  let xref = `xref\n0 ${totalObjs}\n0000000000 65535 f \n`;
+  let xref = `xref\n0 ${totalObjCount + 1}\n0000000000 65535 f \n`;
   for (const o of offsets) {
     xref += `${String(o).padStart(10, "0")} 00000 n \n`;
   }
-  xref += `trailer\n<< /Size ${totalObjs} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
-  parts.push(enc.encode(xref));
+  xref += `trailer\n<< /Size ${totalObjCount + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  parts.push(enc2.encode(xref));
 
-  // Combine all parts
+  // Combine
   let totalLen = 0;
   for (const p of parts) totalLen += p.length;
   const result = new Uint8Array(totalLen);
