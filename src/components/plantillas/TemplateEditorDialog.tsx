@@ -41,7 +41,7 @@ const BIRD_DEFAULT_TEMPLATE = `<p><b>DOCUMENTO DE CESIÓN</b></p>
 <p>Domicilio: {{domicilio_comprador}}</p>
 <p>Firmando el presente en Cuevas del Almanzora, a {{fecha_documento}}.</p>
 <p>Documentación entregada: Documento de cesión, certificado de cría en cautividad, CITES original y sexaje.</p>
-<p>Firma del criador&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Firma del receptor</p>`;
+<p>Firma del criador&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Firma del receptor</p>`;
 
 const BIRD_VARIABLES = [
   { key: "{{nombre_comun}}", label: "Nombre común" },
@@ -229,7 +229,7 @@ export function TemplateEditorDialog({
               onInput={handleInput}
               onMouseUp={saveSelection}
               onKeyUp={saveSelection}
-              className="min-h-[350px] max-h-[500px] overflow-y-auto p-4 border border-t-0 border-border rounded-b-md bg-background text-foreground text-sm leading-tight focus:outline-none focus:ring-1 focus:ring-ring [&_p]:my-0.5 [&_div]:my-0.5 [&_br+br]:leading-[0.5]"
+              className="min-h-[350px] max-h-[500px] overflow-y-auto p-4 border border-t-0 border-border rounded-b-md bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-ring"
               style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}
             />
           </div>
