@@ -114,7 +114,12 @@
     "freeTextExternalFem": "Texto libre si es externa",
     "observations": "Observaciones...",
     "noSpecimensFound": "No se encontraron ejemplares",
-    "bird": "Ave"
+    "bird": "Ave",
+    "parents": "Parentales",
+    "internalParents": "Parentales internos",
+    "externalParents": "Parentales externos",
+    "searchPair": "Buscar pareja registrada...",
+    "searchByAnyField": "Buscar por anilla, microchip, CITES, MITECO..."
   },
   "buyers": {
     "title": "Compradores",

@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Constants } from "@/integrations/supabase/types";
 import type { Bird, BirdInsert } from "@/hooks/useBirds";
 import { useEffect, useState } from "react";
@@ -14,6 +16,7 @@ import { useBirdSpeciesCatalog } from "@/hooks/useBirdSpeciesCatalog";
 import { ZonaCombobox } from "@/components/shared/ZonaCombobox";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
 import { BirdParejaSearch } from "./BirdParejaSearch";
+import { ParentPairSearch } from "./ParentPairSearch";
 import { useTranslation } from "react-i18next";
 
 const SEXES = Constants.public.Enums.animal_sex;
@@ -30,6 +33,8 @@ type Props = {
 
 export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, prefillData, commonNames = [] }: Props) {
   const { t } = useTranslation();
+  const [internalParents, setInternalParents] = useState(false);
+  const [parentPairLabel, setParentPairLabel] = useState<string | null>(null);
 
   const birdSchema = z.object({
     especie: z.string().min(1, t("birds.selectCommonName")),
@@ -43,6 +48,8 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
     zona: z.string().max(200).optional().or(z.literal("")),
     padre_externo: z.string().max(200).optional().or(z.literal("")),
     madre_externa: z.string().max(200).optional().or(z.literal("")),
+    padre_id: z.string().optional().or(z.literal("")),
+    madre_id: z.string().optional().or(z.literal("")),
     comentarios: z.string().max(2000).optional().or(z.literal("")),
     fecha_muerte: z.string().optional().or(z.literal("")),
     pareja_id: z.string().optional().or(z.literal("")),
@@ -64,6 +71,8 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
       zona: bird?.zona ?? "",
       padre_externo: bird?.padre_externo ?? "",
       madre_externa: bird?.madre_externa ?? "",
+      padre_id: bird?.padre_id ?? "",
+      madre_id: bird?.madre_id ?? "",
       comentarios: bird?.comentarios ?? "",
       fecha_muerte: bird?.fecha_muerte ?? "",
       pareja_id: bird?.pareja_id ?? "",
@@ -89,6 +98,11 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
     if (open) {
       const pf = prefillData ?? {};
       const commonName = (pf.nombre_comun as any) ?? (pf.especie as any) ?? bird?.especie ?? (commonNames[0] || "");
+      const hasPadreId = bird?.padre_id;
+      const hasMadreId = bird?.madre_id;
+      setInternalParents(!!(hasPadreId || hasMadreId));
+      setParentPairLabel(null);
+
       form.reset({
         especie: commonName,
         especie_id: (pf.especie_id as any) ?? (bird as any)?.especie_id ?? "",
@@ -101,6 +115,8 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
         zona: bird?.zona ?? "",
         padre_externo: pf.padre_externo ?? bird?.padre_externo ?? "",
         madre_externa: pf.madre_externa ?? bird?.madre_externa ?? "",
+        padre_id: bird?.padre_id ?? "",
+        madre_id: bird?.madre_id ?? "",
         comentarios: bird?.comentarios ?? "",
         fecha_muerte: bird?.fecha_muerte ?? "",
         pareja_id: bird?.pareja_id ?? "",
@@ -134,13 +150,32 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
       anilla: values.anilla || null,
       numero_cites: values.numero_cites || null,
       zona: values.zona || null,
-      padre_externo: values.padre_externo || null,
-      madre_externa: values.madre_externa || null,
+      padre_externo: internalParents ? null : (values.padre_externo || null),
+      madre_externa: internalParents ? null : (values.madre_externa || null),
+      padre_id: internalParents ? (values.padre_id || null) : null,
+      madre_id: internalParents ? (values.madre_id || null) : null,
       comentarios: values.comentarios || null,
       fecha_muerte: values.fecha_muerte || null,
       pareja_id: values.pareja_id || null,
     };
     onSubmit(cleaned);
+  };
+
+  const handlePairSelect = (
+    male: { id: string; anilla: string | null; microchip: string | null },
+    female: { id: string; anilla: string | null; microchip: string | null }
+  ) => {
+    form.setValue("padre_id", male.id);
+    form.setValue("madre_id", female.id);
+    const mLabel = male.anilla || male.microchip || "s/id";
+    const fLabel = female.anilla || female.microchip || "s/id";
+    setParentPairLabel(`♂ ${mLabel} — ♀ ${fLabel}`);
+  };
+
+  const handlePairClear = () => {
+    form.setValue("padre_id", "");
+    form.setValue("madre_id", "");
+    setParentPairLabel(null);
   };
 
   return (
@@ -243,21 +278,63 @@ export function BirdFormDialog({ open, onOpenChange, bird, onSubmit, isLoading, 
                   <FormMessage />
                 </FormItem>
               )} />
-              <FormField control={form.control} name="padre_externo" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("birds.externalFather")}</FormLabel>
-                  <FormControl><Input placeholder={t("birds.freeTextExternal")} {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="madre_externa" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("birds.externalMother")}</FormLabel>
-                  <FormControl><Input placeholder={t("birds.freeTextExternalFem")} {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
             </div>
+
+            {/* Parents section with toggle */}
+            <div className="rounded-lg border border-border p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{t("birds.parents")}</span>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="parent-toggle" className="text-xs text-muted-foreground">
+                    {internalParents ? t("birds.internalParents") : t("birds.externalParents")}
+                  </Label>
+                  <Switch
+                    id="parent-toggle"
+                    checked={internalParents}
+                    onCheckedChange={(checked) => {
+                      setInternalParents(checked);
+                      if (checked) {
+                        form.setValue("padre_externo", "");
+                        form.setValue("madre_externa", "");
+                      } else {
+                        form.setValue("padre_id", "");
+                        form.setValue("madre_id", "");
+                        setParentPairLabel(null);
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+
+              {internalParents ? (
+                <div className="space-y-2">
+                  <ParentPairSearch
+                    especie={selectedCommonName}
+                    onSelect={handlePairSelect}
+                    onClear={handlePairClear}
+                    selectedLabel={parentPairLabel}
+                  />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField control={form.control} name="padre_externo" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("birds.externalFather")}</FormLabel>
+                      <FormControl><Input placeholder={t("birds.freeTextExternal")} {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="madre_externa" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("birds.externalMother")}</FormLabel>
+                      <FormControl><Input placeholder={t("birds.freeTextExternalFem")} {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+              )}
+            </div>
+
             <FormField control={form.control} name="pareja_id" render={({ field }) => (
               <FormItem>
                 <FormLabel>{t("birds.partner")}</FormLabel>
