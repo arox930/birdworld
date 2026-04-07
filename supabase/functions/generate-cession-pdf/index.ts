@@ -384,15 +384,13 @@ function buildPdf(blocks: Block[], logo?: LogoImage): Uint8Array {
 
   const addLogoToPage = () => {
     if (logo && isFirstPage) {
-      // Place logo at top-right corner
+      // Place logo at top-right corner behind text (no y adjustment)
       const lx = PW - M - logoDrawW;
       const ly = PH - M - logoDrawH;
       s += `q\n`;
       s += `${logoDrawW.toFixed(2)} 0 0 ${logoDrawH.toFixed(2)} ${lx.toFixed(2)} ${ly.toFixed(2)} cm\n`;
       s += `/Im1 Do\n`;
       s += `Q\n`;
-      // Reserve space for logo area on right side (adjust y if needed)
-      y = Math.min(y, PH - M - logoDrawH - 10);
     }
   };
 
