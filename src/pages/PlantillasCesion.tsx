@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Bird, ChevronRight, FileText, Plus, Pencil, Download } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Bird, ChevronRight, FileText, Plus, Pencil, Download, ImagePlus, Trash2, Loader2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { useCessionTemplates, useUpsertCessionTemplate } from "@/hooks/useCessionTemplates";
@@ -10,6 +10,8 @@ import { TemplateEditorDialog } from "@/components/plantillas/TemplateEditorDial
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+const LOGO_PATH = "cession-logo";
 
 export default function PlantillasCesion() {
   const { t } = useTranslation();
@@ -23,6 +25,81 @@ export default function PlantillasCesion() {
   const [editingKey, setEditingKey] = useState<string>("");
   const [editingContent, setEditingContent] = useState<string>("");
   const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
+
+  // Logo state
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoLoading, setLogoLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load existing logo on mount
+  useEffect(() => {
+    loadLogo();
+  }, []);
+
+  const loadLogo = async () => {
+    // List files with the logo prefix to find any extension
+    const { data: files } = await supabase.storage.from("uploads").list("", {
+      search: LOGO_PATH,
+    });
+    const logoFile = files?.find((f) => f.name.startsWith(LOGO_PATH));
+    if (logoFile) {
+      const { data } = await supabase.storage.from("uploads").createSignedUrl(logoFile.name, 3600);
+      if (data?.signedUrl) setLogoUrl(data.signedUrl);
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error(t("templates.logoInvalidType", "Solo se permiten imágenes"));
+      return;
+    }
+
+    setLogoLoading(true);
+    try {
+      // Remove old logo files
+      const { data: existing } = await supabase.storage.from("uploads").list("", { search: LOGO_PATH });
+      if (existing?.length) {
+        await supabase.storage.from("uploads").remove(existing.map((f) => f.name));
+      }
+
+      const ext = file.name.split(".").pop() || "png";
+      const fileName = `${LOGO_PATH}.${ext}`;
+
+      const { error } = await supabase.storage.from("uploads").upload(fileName, file, {
+        contentType: file.type,
+        upsert: true,
+      });
+      if (error) throw error;
+
+      const { data } = await supabase.storage.from("uploads").createSignedUrl(fileName, 3600);
+      if (data?.signedUrl) setLogoUrl(data.signedUrl);
+      toast.success(t("templates.logoUploaded", "Logo subido correctamente"));
+    } catch (err: any) {
+      toast.error(`Error: ${err.message}`);
+    } finally {
+      setLogoLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleLogoRemove = async () => {
+    setLogoLoading(true);
+    try {
+      const { data: existing } = await supabase.storage.from("uploads").list("", { search: LOGO_PATH });
+      if (existing?.length) {
+        await supabase.storage.from("uploads").remove(existing.map((f) => f.name));
+      }
+      setLogoUrl(null);
+      toast.success(t("templates.logoRemoved", "Logo eliminado"));
+    } catch (err: any) {
+      toast.error(`Error: ${err.message}`);
+    } finally {
+      setLogoLoading(false);
+    }
+  };
 
   const getTemplate = (type: string, key: string) =>
     templates.find((t) => t.animal_type === type && t.group_key === key);
@@ -58,7 +135,6 @@ export default function PlantillasCesion() {
       });
 
       if (error) {
-        // Try to extract error message from context
         try {
           const context = (error as any).context;
           if (context instanceof Response) {
@@ -71,7 +147,6 @@ export default function PlantillasCesion() {
         throw error;
       }
 
-      // data is a Blob when the response is not JSON
       const blob = data instanceof Blob ? data : new Blob([data], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -100,6 +175,72 @@ export default function PlantillasCesion() {
       <div className="flex items-center gap-3">
         <FileText className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold text-foreground">{t("templates.title")}</h1>
+      </div>
+
+      {/* Logo upload section */}
+      <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <ImagePlus className="h-5 w-5 text-primary" />
+          <span className="font-semibold text-foreground text-sm">
+            {t("templates.logoTitle", "Logo para documentos de cesión")}
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {t("templates.logoDescription", "Este logo aparecerá en la esquina superior derecha de todos los documentos de cesión generados.")}
+        </p>
+
+        <div className="flex items-center gap-4">
+          {logoUrl ? (
+            <div className="flex items-center gap-4">
+              <img
+                src={logoUrl}
+                alt="Logo cesión"
+                className="h-16 w-auto max-w-[160px] object-contain rounded border border-border bg-background p-1"
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs gap-1"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={logoLoading}
+                >
+                  <Pencil className="h-3 w-3" />
+                  {t("templates.logoChange", "Cambiar")}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="h-8 text-xs gap-1"
+                  onClick={handleLogoRemove}
+                  disabled={logoLoading}
+                >
+                  {logoLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                  {t("templates.logoRemoveBtn", "Eliminar")}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs gap-1"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={logoLoading}
+            >
+              {logoLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImagePlus className="h-3 w-3" />}
+              {t("templates.logoUpload", "Subir logo")}
+            </Button>
+          )}
+        </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleLogoUpload}
+        />
       </div>
 
       <Collapsible defaultOpen>
