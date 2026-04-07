@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { useLicense } from "@/hooks/useLicense";
 import Dashboard from "./pages/Dashboard";
 import Aves from "./pages/Aves";
+import Parejas from "./pages/Parejas";
 import Gastos from "./pages/Gastos";
 import Compradores from "./pages/Compradores";
 import Mapa from "./pages/Mapa";
@@ -41,6 +42,7 @@ function AppRoutes() {
       <Route path="/app" element={<AppLayout />}>
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="aves" element={<Aves />} />
+        <Route path="parejas" element={<Parejas />} />
         <Route path="gastos" element={<Gastos />} />
         <Route path="compradores" element={<Compradores />} />
         <Route path="mapa" element={<Mapa />} />

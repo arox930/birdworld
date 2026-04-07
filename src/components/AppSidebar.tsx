@@ -1,4 +1,4 @@
-import { LayoutDashboard, Map, Users, FileText, Bird, Mail } from "lucide-react";
+import { LayoutDashboard, Map, Users, FileText, Bird, Mail, Heart } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import logoImg from "@/assets/logo.png";
 import { useLocation } from "react-router-dom";
@@ -19,6 +19,7 @@ import {
 const navItems = [
   { titleKey: "nav.dashboard", url: "/app/dashboard", icon: LayoutDashboard },
   { titleKey: "nav.birds", url: "/app/aves", icon: Bird },
+  { titleKey: "nav.pairs", url: "/app/parejas", icon: Heart },
   { titleKey: "nav.buyers", url: "/app/compradores", icon: Users },
   { titleKey: "nav.map", url: "/app/mapa", icon: Map },
   { titleKey: "nav.cessionTemplates", url: "/app/plantillas-cesion", icon: FileText },
