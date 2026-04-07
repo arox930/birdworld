@@ -47,6 +47,7 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
   useEffect(() => {
     if (editMode && existingCession && open) {
       setPrecio(String(existingCession.precio));
+      setResolvedBuyerId(existingCession.buyer_id);
       const buyer = (existingCession as any).buyers;
       if (buyer) {
         setNombre(buyer.nombre || "");
