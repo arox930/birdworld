@@ -1,6 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Baby } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Heart, Baby, MoreHorizontal, Eye, FileText, FileEdit, Download } from "lucide-react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
@@ -11,6 +13,10 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pair: Pair | null;
+  onViewOffspring?: (chick: any) => void;
+  onCessionOffspring?: (chick: any) => void;
+  onEditCessionOffspring?: (chick: any) => void;
+  onDownloadCessionOffspring?: (chick: any) => void;
 };
 
 function Field({ label, value }: { label: string; value?: string | null }) {
@@ -46,7 +52,7 @@ function BirdCard({ bird, sexLabel, t }: { bird: Pair["bird1"]; sexLabel: string
   );
 }
 
-export function PairDetailDialog({ open, onOpenChange, pair }: Props) {
+export function PairDetailDialog({ open, onOpenChange, pair, onViewOffspring, onCessionOffspring, onEditCessionOffspring, onDownloadCessionOffspring }: Props) {
   const { t } = useTranslation();
   const { data: offspring = [], isLoading: loadingOffspring } = usePairOffspring(
     pair?.bird1.id ?? null,
@@ -91,6 +97,7 @@ export function PairDetailDialog({ open, onOpenChange, pair }: Props) {
                     <th className="px-3 py-2 text-left">{t("birds.sex")}</th>
                     <th className="px-3 py-2 text-left">{t("birds.birthDate")}</th>
                     <th className="px-3 py-2 text-left">{t("birds.status")}</th>
+                    <th className="px-3 py-2 w-10"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -106,6 +113,34 @@ export function PairDetailDialog({ open, onOpenChange, pair }: Props) {
                           <Badge variant={chick.fecha_muerte ? "destructive" : chick.fecha_cesion ? "secondary" : "default"} className="text-xs">
                             {estado}
                           </Badge>
+                        </td>
+                        <td className="px-3 py-2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => onViewOffspring?.(chick)}>
+                                <Eye className="mr-2 h-4 w-4" /> {t("common.view")}
+                              </DropdownMenuItem>
+                              {chick.fecha_muerte ? null : chick.fecha_cesion ? (
+                                <>
+                                  <DropdownMenuItem onClick={() => onEditCessionOffspring?.(chick)}>
+                                    <FileEdit className="mr-2 h-4 w-4" /> {t("birds.modifyCession")}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => onDownloadCessionOffspring?.(chick)}>
+                                    <Download className="mr-2 h-4 w-4" /> {t("birds.downloadCession")}
+                                  </DropdownMenuItem>
+                                </>
+                              ) : (
+                                <DropdownMenuItem onClick={() => onCessionOffspring?.(chick)}>
+                                  <FileText className="mr-2 h-4 w-4" /> {t("birds.cessionDocument")}
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </td>
                       </tr>
                     );
