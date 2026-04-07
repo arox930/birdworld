@@ -7,6 +7,9 @@ import { usePairs } from "@/hooks/usePairs";
 import { useBirdCommonNames } from "@/hooks/useBirdCommonNames";
 import { SpeciesManager } from "@/components/aves/SpeciesManager";
 import { PairDetailDialog } from "@/components/parejas/PairDetailDialog";
+import { BirdViewDialog } from "@/components/aves/BirdViewDialog";
+import { CessionDialog } from "@/components/shared/CessionDialog";
+import { useDownloadCessionPdf } from "@/hooks/useCessions";
 import { useDebounce } from "@/hooks/useDebounce";
 import { getSpeciesDisplayName } from "@/lib/speciesNames";
 import { cn } from "@/lib/utils";
@@ -18,6 +21,12 @@ export default function Parejas() {
   const [category, setCategory] = useState("all");
   const [speciesFilter, setSpeciesFilter] = useState<string | null>(null);
   const [selectedPair, setSelectedPair] = useState<Pair | null>(null);
+
+  // Offspring action states
+  const [viewingBird, setViewingBird] = useState<any>(null);
+  const [cessionBird, setCessionBird] = useState<any>(null);
+  const [cessionEditMode, setCessionEditMode] = useState(false);
+  const { download: downloadCessionPdf } = useDownloadCessionPdf();
 
   const debouncedSearch = useDebounce(search, 300);
   const { data: commonNames = [] } = useBirdCommonNames();
@@ -37,6 +46,11 @@ export default function Parejas() {
     if (bird.microchip) parts.push(bird.microchip);
     return parts.length > 0 ? parts.join(" · ") : bird.sexo;
   };
+
+  const handleViewOffspring = (chick: any) => setViewingBird(chick);
+  const handleCessionOffspring = (chick: any) => { setCessionEditMode(false); setCessionBird(chick); };
+  const handleEditCessionOffspring = (chick: any) => { setCessionEditMode(true); setCessionBird(chick); };
+  const handleDownloadCessionOffspring = (chick: any) => downloadCessionPdf(chick.id, "bird");
 
   return (
     <div className="space-y-5">
@@ -164,6 +178,25 @@ export default function Parejas() {
         open={!!selectedPair}
         onOpenChange={(o) => !o && setSelectedPair(null)}
         pair={selectedPair}
+        onViewOffspring={handleViewOffspring}
+        onCessionOffspring={handleCessionOffspring}
+        onEditCessionOffspring={handleEditCessionOffspring}
+        onDownloadCessionOffspring={handleDownloadCessionOffspring}
+      />
+
+      <BirdViewDialog
+        open={!!viewingBird}
+        onOpenChange={(o) => !o && setViewingBird(null)}
+        bird={viewingBird}
+      />
+
+      <CessionDialog
+        open={!!cessionBird}
+        onOpenChange={(o) => !o && setCessionBird(null)}
+        animalId={cessionBird?.id ?? null}
+        animalType="bird"
+        animalLabel={cessionBird ? `${getSpeciesDisplayName(cessionBird.especie)} — ${cessionBird.anilla || cessionBird.microchip || "s/id"}` : ""}
+        editMode={cessionEditMode}
       />
     </div>
   );

@@ -102,7 +102,7 @@ export function usePairOffspring(parentId1: string | null, parentId2: string | n
       // Find birds that have BOTH parents matching the pair (in either direction)
       const { data, error } = await supabase
         .from("birds")
-        .select("id, anilla, microchip, sexo, especie, fecha_nacimiento, fecha_muerte, fecha_cesion, numero_cites, id_miteco, zona, species_catalog:especie_id(id, nombre_comun, nombre_especie)")
+        .select("id, anilla, microchip, sexo, especie, especie_id, fecha_nacimiento, fecha_muerte, fecha_cesion, numero_cites, id_miteco, zona, comentarios, comprador_id, comprador_texto, padre_externo, madre_externa, pareja_id, species_catalog:especie_id(id, nombre_comun, nombre_especie), buyers:comprador_id(nombre, apellidos, dni, domicilio), pareja:pareja_id(id, anilla, microchip, especie)")
         .or(`and(padre_id.eq.${parentId1},madre_id.eq.${parentId2}),and(padre_id.eq.${parentId2},madre_id.eq.${parentId1})`)
         .order("fecha_nacimiento", { ascending: false });
 
