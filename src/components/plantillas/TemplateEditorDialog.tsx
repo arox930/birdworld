@@ -14,8 +14,8 @@ import { RichTextToolbar } from "./RichTextToolbar";
 
 const DEFAULT_HEADER = "<p><b>DOCUMENTO DE CESIÓN</b></p><p><br></p>";
 
-const BIRD_DEFAULT_TEMPLATE = `<p><b>DOCUMENTO DE CESIÓN</b></p>
-<p><b><u>Datos del Criador/Propietario que cede la propiedad</u></b></p>
+const BIRD_DEFAULT_TEMPLATE = `<p style="font-size: 32px; text-align: center;"><b>DOCUMENTO DE CESIÓN</b></p>
+<p><u>Datos del Criador/Propietario que cede la propiedad</u></p>
 <p>Nombre: </p>
 <p>Apellidos: </p>
 <p>DNI: </p>
