@@ -15,14 +15,14 @@ import { RichTextToolbar } from "./RichTextToolbar";
 const DEFAULT_HEADER = "<p><b>DOCUMENTO DE CESIÓN</b></p><p><br></p>";
 
 const BIRD_DEFAULT_TEMPLATE = `<p><b>DOCUMENTO DE CESIÓN</b></p>
-<p><b>Datos del Criador/Propietario que cede la propiedad</b></p>
+<p><b><u>Datos del Criador/Propietario que cede la propiedad</u></b></p>
 <p>Nombre: </p>
 <p>Apellidos: </p>
 <p>DNI: </p>
 <p>Domicilio (Calle, nº, código postal, población, provincia):</p>
 <p>Nº de Núcleo Zoológico:</p>
 <p>Nº CATICE (SOIVRE):</p>
-<p>Como actual propietario del siguiente ejemplar</p>
+<p><u>Como actual propietario del siguiente ejemplar</u></p>
 <p>Numero ejemplares: 1</p>
 <p>Especie (Nombre científico completo): {{especie}}</p>
 <p>Nombre común: {{nombre_comun}}</p>
@@ -32,16 +32,16 @@ const BIRD_DEFAULT_TEMPLATE = `<p><b>DOCUMENTO DE CESIÓN</b></p>
 <p>Identificación MITECO: {{miteco}}</p>
 <p>Anilla cerrada: {{anilla}}</p>
 <p>Microchip: {{microchip}}</p>
-<p>Procedente de la cría en cautividad en la UE, de los parentales con la siguiente identificación</p>
+<p><u>Procedente de la cría en cautividad en la UE, de los parentales con la siguiente identificación</u></p>
 <p>Macho, nº de microchip, código CITES, Identificación MITECO, Anilla cerrada: {{padre}}</p>
 <p>Hembra, nº de microchip, código CITES, Identificación MITECO, Anilla cerrada: {{madre}}</p>
-<p>Cedo la posesión de dicho ejemplar, en perfectas condiciones, y de forma definitiva a:</p>
+<p><u>Cedo la posesión de dicho ejemplar, en perfectas condiciones, y de forma definitiva a:</u></p>
 <p>Nombre y apellidos: {{nombre_comprador}} {{apellidos_comprador}}</p>
 <p>DNI: {{dni_comprador}}</p>
 <p>Domicilio: {{domicilio_comprador}}</p>
 <p>Firmando el presente en Cuevas del Almanzora, a {{fecha_documento}}.</p>
 <p>Documentación entregada: Documento de cesión, certificado de cría en cautividad, CITES original y sexaje.</p>
-<p>Firma del criador                                                                    Firma del receptor</p>`;
+<p><u>Firma del criador</u>                                                                    <u>Firma del receptor</u></p>`;
 
 const BIRD_VARIABLES = [
   { key: "{{nombre_comun}}", label: "Nombre común" },
