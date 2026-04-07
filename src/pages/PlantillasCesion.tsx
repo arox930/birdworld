@@ -65,11 +65,32 @@ export default function PlantillasCesion() {
         await supabase.storage.from("uploads").remove(existing.map((f) => f.name));
       }
 
-      const ext = file.name.split(".").pop() || "png";
-      const fileName = `${LOGO_PATH}.${ext}`;
+      // Convert any image to JPEG using canvas (PDF engine only supports JPEG)
+      const jpegBlob = await new Promise<Blob>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext("2d")!;
+          // White background for transparent PNGs
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob(
+            (blob) => (blob ? resolve(blob) : reject(new Error("Failed to convert image"))),
+            "image/jpeg",
+            0.92
+          );
+        };
+        img.onerror = () => reject(new Error("Failed to load image"));
+        img.src = URL.createObjectURL(file);
+      });
 
-      const { error } = await supabase.storage.from("uploads").upload(fileName, file, {
-        contentType: file.type,
+      const fileName = `${LOGO_PATH}.jpg`;
+
+      const { error } = await supabase.storage.from("uploads").upload(fileName, jpegBlob, {
+        contentType: "image/jpeg",
         upsert: true,
       });
       if (error) throw error;
