@@ -357,7 +357,7 @@ function buildPdf(blocks: Block[]): Uint8Array {
     // Check if this is an empty block (empty paragraph = vertical spacing)
     const isEmpty = block.spans.every(sp => sp.text.trim() === "");
     if (isEmpty) {
-      const emptyLh = 11 * 1.5; // default line height for empty paragraphs
+      const emptyLh = 11 * 0.8; // compact line height for empty paragraphs
       y -= emptyLh;
       if (y < M) newPage();
       continue;
@@ -367,7 +367,7 @@ function buildPdf(blocks: Block[]): Uint8Array {
     
     for (const vl of visualLines) {
       const maxFs = Math.max(...vl.spans.map(sp => sp.fontSize), 11);
-      const lh = maxFs * 1.5;
+      const lh = maxFs * 1.2;
 
       if (y - lh < M) newPage();
 
@@ -403,7 +403,7 @@ function buildPdf(blocks: Block[]): Uint8Array {
     }
 
     // Paragraph spacing between blocks
-    y -= 8;
+    y -= 3;
   }
 
   pageStreams.push(s);
