@@ -1,45 +1,52 @@
 
+Objetivo: hacer que el PDF descargado de cesión tenga realmente menos interlineado, no solo el editor visual.
 
-## Alternativa sin cuenta de servicio: Google Apps Script como proxy
+Lo que he encontrado:
+- La reducción que se hizo en `TemplateEditorDialog` y `CessionPreviewEditor` solo afecta al editor en pantalla mediante clases Tailwind como `leading-tight` y márgenes reducidos.
+- El PDF descargado no usa ese CSS. Se genera en `supabase/functions/generate-cession-pdf/index.ts` con un renderizador propio.
+- Ahí el interlineado está fijado manualmente con valores bastante amplios:
+  - líneas normales: `const lh = maxFs * 1.5`
+  - párrafos vacíos: `const emptyLh = 11 * 1.5`
+  - separación entre bloques/párrafos: `y -= 8`
 
-Crear una cuenta de servicio en Google Cloud puede ser complicado. Existe una alternativa mucho mas sencilla: usar **Google Apps Script** como intermediario. Es gratuito, no requiere consola de Google Cloud, y se configura directamente desde el propio Google Sheet.
+Plan de implementación:
+1. Ajustar el motor PDF de cesiones
+- Reducir el line-height real del PDF en `buildPdf(...)`.
+- Reducir también la separación adicional entre bloques para que el cambio sea visible.
+- Reducir el espacio de párrafos vacíos / saltos visuales para que no siga pareciendo “aireado”.
 
-### Como funciona
+2. Mantener coherencia entre editor y PDF
+- Hacer que los valores del PDF se acerquen al aspecto del editor actual.
+- Revisar que no queden diferencias evidentes entre:
+  - plantilla en Plantillas de Cesión
+  - previsualización antes de generar
+  - PDF final descargado
 
-1. Desde tu Google Sheet, abres el editor de Apps Script (Extensiones > Apps Script)
-2. Pegas un script que expone dos endpoints: uno para validar la licencia y otro para escribir Device_Hash y Activated_At
-3. Lo despliegas como "aplicacion web" publica
-4. La Edge Function de Lovable llama a esa URL en vez de usar la API de Sheets directamente
+3. Afinar el tratamiento de párrafos vacíos
+- Ahora los `<p><br></p>` y bloques vacíos siguen metiendo bastante altura.
+- Ajustaré esa lógica para que los saltos sigan existiendo, pero con menos separación.
 
-### Cambios planificados
+4. Validar impacto funcional
+- Confirmar que generar una cesión desde Aves o desde Parejas siga teniendo exactamente la misma repercusión de negocio, ya que ambas rutas usan la misma función `generate-cession-pdf`.
+- No hace falta tocar hooks ni lógica de descarga, salvo que quiera añadir más fidelidad visual después.
 
-**1. Google Apps Script (lo creas tu en el Sheet)**
-- Script que recibe una licencia por POST
-- Busca en columna A si existe y en columna B si el STATUS es "Vendido"
-- Si es valida, escribe Device_Hash en columna C y Activated_At en columna E
-- Devuelve JSON con `{ valid: true/false }`
+Resultado esperado:
+- El PDF descargado mostrará menos interlineado de forma apreciable.
+- La vista previa y el PDF quedarán mucho más parecidos.
+- No cambiará el flujo de creación/edición de cesión, solo la maquetación del documento final.
 
-**2. Edge Function `validate-license` (actualizar)**
-- En vez de descargar CSV y parsear, hace POST al Apps Script web app
-- Envia `license_key` y `device_hash`
-- Recibe la respuesta y guarda en `app_licenses` si es valida
+Detalles técnicos:
+- Archivo clave: `supabase/functions/generate-cession-pdf/index.ts`
+- Líneas relevantes detectadas:
+  - `const emptyLh = 11 * 1.5`
+  - `const lh = maxFs * 1.5`
+  - `y -= 8`
+- El cambio correcto no está en React/Tailwind, sino en el generador PDF del backend.
 
-**3. Frontend (sin cambios)**
-- `useLicense.ts` y `LicenseGate.tsx` siguen funcionando igual
-- Se genera el device_hash en el frontend y se envia junto con la licencia
-
-### Pasos para ti en Google Sheets
-
-1. Abre tu Google Sheet
-2. Ve a **Extensiones > Apps Script**
-3. Pega el codigo que te proporcionare (copy-paste directo)
-4. Click en **Desplegar > Nueva implementacion > Aplicacion web**
-5. Acceso: "Cualquier persona"
-6. Copia la URL generada
-7. Me la pegas aqui y yo actualizo el secret
-
-### Archivos a modificar
-- `supabase/functions/validate-license/index.ts` — simplificar para llamar al Apps Script
-- `src/hooks/useLicense.ts` — añadir generacion de device_hash
-- `src/pages/LicenseGate.tsx` — enviar device_hash junto con la licencia
-
+Si quieres el ajuste más agresivo posible, lo siguiente sería dejarlo aproximadamente en una combinación tipo:
+```text
+line-height: ~1.15–1.25
+spacing between paragraphs: ~2–4pt
+empty paragraph spacing: claramente menor que ahora
+```
+Eso haría que la reducción se note de verdad en el documento descargado.
