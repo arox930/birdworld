@@ -101,10 +101,6 @@ export default function PlantillasCesion() {
         <FileText className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold text-foreground">{t("templates.title")}</h1>
       </div>
-      <p className="text-sm text-muted-foreground">
-        {t("templates.description")}{" "}
-        {t("templates.useVariables")} <code className="bg-muted px-1 rounded text-xs">{"{{nombre_comprador}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{dni_comprador}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{precio}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{fecha}}"}</code>, <code className="bg-muted px-1 rounded text-xs">{"{{identificador_animal}}"}</code> {t("templates.toAutofill")}
-      </p>
 
       <Collapsible defaultOpen>
         <CollapsibleTrigger className="flex items-center gap-2 w-full p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors group">
