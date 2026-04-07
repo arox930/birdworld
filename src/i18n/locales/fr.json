@@ -114,7 +114,12 @@
     "freeTextExternalFem": "Texte libre si externe",
     "observations": "Observations...",
     "noSpecimensFound": "Aucun spécimen trouvé",
-    "bird": "Oiseau"
+    "bird": "Oiseau",
+    "parents": "Parents",
+    "internalParents": "Parents internes",
+    "externalParents": "Parents externes",
+    "searchPair": "Rechercher un couple enregistré...",
+    "searchByAnyField": "Rechercher par bague, micropuce, CITES, MITECO..."
   },
   "buyers": {
     "title": "Acheteurs",
