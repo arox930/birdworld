@@ -155,21 +155,29 @@ export function DashboardCharts({
 }
 
 function mergeMonthlyData(births: ChartData, deaths: ChartData) {
+  const ordered: string[] = [];
   const map: Record<string, { month: string; nacimientos: number; muertes: number }> = {};
-  births.forEach(b => { map[b.month] = { month: b.month, nacimientos: b.value, muertes: 0 }; });
+  births.forEach(b => {
+    if (!map[b.month]) ordered.push(b.month);
+    map[b.month] = { month: b.month, nacimientos: b.value, muertes: 0 };
+  });
   deaths.forEach(d => {
     if (map[d.month]) map[d.month].muertes = d.value;
-    else map[d.month] = { month: d.month, nacimientos: 0, muertes: d.value };
+    else { ordered.push(d.month); map[d.month] = { month: d.month, nacimientos: 0, muertes: d.value }; }
   });
-  return Object.values(map).sort((a, b) => a.month.localeCompare(b.month));
+  return ordered.map(m => map[m]);
 }
 
 function mergeRevenueExpenses(revenue: ChartData, expenses: ChartData) {
+  const ordered: string[] = [];
   const map: Record<string, { month: string; ingresos: number; gastos: number }> = {};
-  revenue.forEach(r => { map[r.month] = { month: r.month, ingresos: r.value, gastos: 0 }; });
+  revenue.forEach(r => {
+    if (!map[r.month]) ordered.push(r.month);
+    map[r.month] = { month: r.month, ingresos: r.value, gastos: 0 };
+  });
   expenses.forEach(e => {
     if (map[e.month]) map[e.month].gastos = e.value;
-    else map[e.month] = { month: e.month, ingresos: 0, gastos: e.value };
+    else { ordered.push(e.month); map[e.month] = { month: e.month, ingresos: 0, gastos: e.value }; }
   });
-  return Object.values(map).sort((a, b) => a.month.localeCompare(b.month));
+  return ordered.map(m => map[m]);
 }
