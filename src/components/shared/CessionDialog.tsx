@@ -46,9 +46,18 @@ export function CessionDialog({ open, onOpenChange, animalId, animalType, animal
 
   useEffect(() => {
     if (editMode && existingCession && open) {
-      setSelectedBuyerId(existingCession.buyer_id);
       setPrecio(String(existingCession.precio));
-      setTab("existing");
+      const buyer = (existingCession as any).buyers;
+      if (buyer) {
+        setNombre(buyer.nombre || "");
+        setApellidos(buyer.apellidos || "");
+        setDni(buyer.dni || "");
+        setDomicilio(buyer.domicilio || "");
+        setTab("new");
+      } else {
+        setSelectedBuyerId(existingCession.buyer_id);
+        setTab("existing");
+      }
     }
   }, [editMode, existingCession, open]);
 
