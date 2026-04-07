@@ -114,7 +114,12 @@
     "freeTextExternalFem": "Free text if external",
     "observations": "Observations...",
     "noSpecimensFound": "No specimens found",
-    "bird": "Bird"
+    "bird": "Bird",
+    "parents": "Parents",
+    "internalParents": "Internal parents",
+    "externalParents": "External parents",
+    "searchPair": "Search registered pair...",
+    "searchByAnyField": "Search by ring, microchip, CITES, MITECO..."
   },
   "buyers": {
     "title": "Buyers",
