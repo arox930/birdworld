@@ -97,23 +97,6 @@ export default function Parejas() {
         </div>
       </div>
 
-      {/* Species filter */}
-      {commonNamesList.length > 0 && (
-        <div className="flex flex-wrap gap-1 items-center">
-          <span className="text-xs text-muted-foreground mr-1">{t("birds.speciesLabel")}:</span>
-          {commonNamesList.map(cn => (
-            <SpeciesManager
-              key={cn}
-              nombreComun={cn}
-              selectedSpeciesId={speciesFilter}
-              onSelectSpecies={(id, nombre) => {
-                setSpeciesFilter(id);
-                if (id) setCategory(nombre);
-              }}
-            />
-          ))}
-        </div>
-      )}
 
       {/* Search */}
       <div className="relative">
