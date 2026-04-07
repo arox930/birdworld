@@ -48,7 +48,7 @@ export function CessionPreviewEditor({ renderedHtml, onBack, onGenerate, isGener
           ref={editorRef}
           contentEditable
           onInput={handleInput}
-          className="min-h-[350px] max-h-[500px] overflow-y-auto p-4 border border-t-0 border-border rounded-b-md bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          className="min-h-[350px] max-h-[500px] overflow-y-auto p-4 border border-t-0 border-border rounded-b-md bg-background text-foreground text-sm leading-snug focus:outline-none focus:ring-1 focus:ring-ring"
           style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}
         />
       </div>
