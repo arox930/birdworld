@@ -225,7 +225,8 @@
     "toAutofill": "para autocompletar.",
     "birdsSection": "Aves",
     "speciesCount": "especies",
-    "noSpeciesRegistered": "Sin especies registradas"
+    "noSpeciesRegistered": "Sin especies registradas",
+    "testDownload": "Descargar prueba"
   },
   "filters": {
     "species": "Especie"
