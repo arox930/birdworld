@@ -378,7 +378,13 @@ export default function Mapa() {
         ))}
 
         {/* Standalone zones (not in folders, placed on canvas) */}
-        {placedStandaloneZones.map((zone) => (
+        {[...placedStandaloneZones]
+          .sort((a, b) => {
+            const ai = zOrder.indexOf(a.id);
+            const bi = zOrder.indexOf(b.id);
+            return (ai === -1 ? -1 : ai) - (bi === -1 ? -1 : bi);
+          })
+          .map((zone) => (
           <MapZoneRect
             key={zone.id}
             zone={zone}
@@ -391,6 +397,7 @@ export default function Mapa() {
             onColorChange={handleColorChange}
             onDelete={handleDeleteZone}
             onPairBirds={handlePairBirds}
+            style={{ zIndex: Math.max(1, zOrder.indexOf(zone.id) + 1) }}
           />
         ))}
       </div>
