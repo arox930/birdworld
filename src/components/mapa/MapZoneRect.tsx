@@ -22,6 +22,7 @@ interface Props {
   onPairBirds?: (bird1Id: string, bird2Id: string) => void;
   draggableToFolder?: boolean;
   onRemoveFromFolder?: (zoneId: string) => void;
+  style?: React.CSSProperties;
 }
 
 export function MapZoneRect({
