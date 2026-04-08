@@ -38,6 +38,7 @@ export function MapZoneRect({
   onPairBirds,
   draggableToFolder = false,
   onRemoveFromFolder,
+  style,
 }: Props) {
   const birdsInZone = animals.filter((a) => a.type === "bird");
   const showPairButton = birdsInZone.length === 2;
