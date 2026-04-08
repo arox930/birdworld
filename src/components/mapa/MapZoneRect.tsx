@@ -22,6 +22,7 @@ interface Props {
   onPairBirds?: (bird1Id: string, bird2Id: string) => void;
   draggableToFolder?: boolean;
   onRemoveFromFolder?: (zoneId: string) => void;
+  style?: React.CSSProperties;
 }
 
 export function MapZoneRect({
@@ -37,6 +38,7 @@ export function MapZoneRect({
   onPairBirds,
   draggableToFolder = false,
   onRemoveFromFolder,
+  style,
 }: Props) {
   const birdsInZone = animals.filter((a) => a.type === "bird");
   const showPairButton = birdsInZone.length === 2;
@@ -58,6 +60,7 @@ export function MapZoneRect({
         height: zone.height,
         borderColor: zone.color,
         backgroundColor: `${zone.color}15`,
+        ...style,
       }}
       onDrop={(e) => {
         e.stopPropagation();

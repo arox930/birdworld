@@ -51,6 +51,8 @@ export default function Mapa() {
   const [newZoneName, setNewZoneName] = useState("");
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+  const [zOrder, setZOrder] = useState<string[]>([]);
+  const bringToFront = (id: string) => setZOrder((prev) => [...prev.filter((z) => z !== id), id]);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const unassigned = animals.filter((a) => !a.zona);
@@ -66,6 +68,7 @@ export default function Mapa() {
     if (!rect) return;
     setDragging({ type: "zone", id: zone.id });
     setDragOffset({ x: e.clientX - rect.left - zone.x, y: e.clientY - rect.top - zone.y });
+    bringToFront(zone.id);
   };
 
   const handleFolderMouseDown = (e: React.MouseEvent, folder: MapFolder) => {
@@ -375,7 +378,13 @@ export default function Mapa() {
         ))}
 
         {/* Standalone zones (not in folders, placed on canvas) */}
-        {placedStandaloneZones.map((zone) => (
+        {[...placedStandaloneZones]
+          .sort((a, b) => {
+            const ai = zOrder.indexOf(a.id);
+            const bi = zOrder.indexOf(b.id);
+            return (ai === -1 ? -1 : ai) - (bi === -1 ? -1 : bi);
+          })
+          .map((zone) => (
           <MapZoneRect
             key={zone.id}
             zone={zone}
@@ -388,6 +397,7 @@ export default function Mapa() {
             onColorChange={handleColorChange}
             onDelete={handleDeleteZone}
             onPairBirds={handlePairBirds}
+            style={{ zIndex: Math.max(1, zOrder.indexOf(zone.id) + 1) }}
           />
         ))}
       </div>
