@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bird, Plus, MapPin, FolderPlus, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Bird, Plus, MapPin, FolderPlus, PanelLeftClose, PanelLeftOpen, Move } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTranslation } from "react-i18next";
@@ -18,15 +18,17 @@ interface Props {
   folders: MapFolder[];
   unmappedZones: string[];
   unassigned: AnimalOnMap[];
+  unplacedZones: MapZone[];
   onAddUnmappedZone: (name: string) => void;
   onAnimalDragStart: (e: React.DragEvent, animal: { id: string; type: "bird" | "dog" }) => void;
+  onZoneDragStart: (e: React.DragEvent, zone: MapZone) => void;
   onNewZoneOpen: () => void;
   onNewFolderOpen: () => void;
 }
 
 export function MapSidebar({
-  zones, folders, unmappedZones, unassigned,
-  onAddUnmappedZone, onAnimalDragStart, onNewZoneOpen, onNewFolderOpen,
+  zones, folders, unmappedZones, unassigned, unplacedZones,
+  onAddUnmappedZone, onAnimalDragStart, onZoneDragStart, onNewZoneOpen, onNewFolderOpen,
 }: Props) {
   const [open, setOpen] = useState(true);
   const { t } = useTranslation();
@@ -61,6 +63,28 @@ export function MapSidebar({
       </div>
 
       <ScrollArea className="flex-1">
+        {/* Unplaced zones - ready to drag to canvas */}
+        {unplacedZones.length > 0 && (
+          <div className="p-4 border-b border-border">
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">
+              Zonas sin colocar ({unplacedZones.length})
+            </h3>
+            <div className="space-y-1">
+              {unplacedZones.map((zone) => (
+                <div
+                  key={zone.id}
+                  draggable
+                  onDragStart={(e) => onZoneDragStart(e, zone)}
+                  className="flex items-center gap-2 text-sm p-1.5 rounded-md bg-muted/50 cursor-grab active:cursor-grabbing hover:bg-muted transition-colors"
+                >
+                  <Move className="h-3.5 w-3.5 shrink-0" style={{ color: zone.color }} />
+                  <span className="truncate text-foreground">{zone.nombre}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {unmappedZones.length > 0 && (
           <div className="p-4 border-b border-border">
             <h3 className="text-sm font-medium text-muted-foreground mb-2">{t("map.unmappedZones")}</h3>
