@@ -51,6 +51,8 @@ export default function Mapa() {
   const [newZoneName, setNewZoneName] = useState("");
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+  const [zOrder, setZOrder] = useState<string[]>([]);
+  const bringToFront = (id: string) => setZOrder((prev) => [...prev.filter((z) => z !== id), id]);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const unassigned = animals.filter((a) => !a.zona);
