@@ -225,6 +225,22 @@ export default function Mapa() {
 
   const handleCanvasDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    
+    // Check if it's an unplaced zone being dropped onto the canvas
+    const zonePlaceData = e.dataTransfer.getData("application/zone-place");
+    if (zonePlaceData) {
+      try {
+        const { id } = JSON.parse(zonePlaceData);
+        const rect = canvasRef.current?.getBoundingClientRect();
+        if (rect) {
+          const x = Math.max(0, Math.round(e.clientX - rect.left - 80));
+          const y = Math.max(0, Math.round(e.clientY - rect.top - 50));
+          updateZone.mutate({ id, x, y }, { onSuccess: () => toast.success("Zona colocada en el mapa") });
+        }
+      } catch {}
+      return;
+    }
+
     try {
       const animal = JSON.parse(e.dataTransfer.getData("application/json"));
       // Auto-unpair birds when removed from zone
@@ -249,10 +265,14 @@ export default function Mapa() {
   const handleAddUnmappedZone = (nombre: string) => {
     const colorIdx = zones.length % ZONE_COLORS.length;
     createZone.mutate(
-      { nombre, x: 20 + zones.length * 30, y: 20 + zones.length * 30, color: ZONE_COLORS[colorIdx] },
-      { onSuccess: () => toast.success(`Zona "${nombre}" añadida al mapa`) }
+      { nombre, x: -1, y: -1, color: ZONE_COLORS[colorIdx] },
+      { onSuccess: () => toast.success(`Zona "${nombre}" añadida al panel`) }
     );
   };
+
+  // Zones not yet placed on canvas (x < 0)
+  const unplacedZones = zones.filter((z) => z.x < 0 || z.y < 0);
+  const placedStandaloneZones = standaloneZones.filter((z) => z.x >= 0 && z.y >= 0);
 
   const handleDeleteZone = (id: string) => {
     deleteZone.mutate(id, { onSuccess: () => toast.success("Zona eliminada del mapa") });
@@ -301,8 +321,13 @@ export default function Mapa() {
         folders={folders}
         unmappedZones={unmappedZones}
         unassigned={unassigned}
+        unplacedZones={unplacedZones}
         onAddUnmappedZone={handleAddUnmappedZone}
         onAnimalDragStart={handleAnimalDragStart}
+        onZoneDragStart={(e, zone) => {
+          e.dataTransfer.setData("application/zone-place", JSON.stringify({ id: zone.id }));
+          e.dataTransfer.effectAllowed = "move";
+        }}
         onNewZoneOpen={() => setNewZoneOpen(true)}
         onNewFolderOpen={() => setNewFolderOpen(true)}
       />
@@ -349,8 +374,8 @@ export default function Mapa() {
           />
         ))}
 
-        {/* Standalone zones (not in folders) */}
-        {standaloneZones.map((zone) => (
+        {/* Standalone zones (not in folders, placed on canvas) */}
+        {placedStandaloneZones.map((zone) => (
           <MapZoneRect
             key={zone.id}
             zone={zone}
