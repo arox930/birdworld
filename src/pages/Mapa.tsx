@@ -68,6 +68,7 @@ export default function Mapa() {
     if (!rect) return;
     setDragging({ type: "zone", id: zone.id });
     setDragOffset({ x: e.clientX - rect.left - zone.x, y: e.clientY - rect.top - zone.y });
+    bringToFront(zone.id);
   };
 
   const handleFolderMouseDown = (e: React.MouseEvent, folder: MapFolder) => {
