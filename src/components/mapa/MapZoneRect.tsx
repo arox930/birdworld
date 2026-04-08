@@ -60,6 +60,7 @@ export function MapZoneRect({
         height: zone.height,
         borderColor: zone.color,
         backgroundColor: `${zone.color}15`,
+        ...style,
       }}
       onDrop={(e) => {
         e.stopPropagation();
